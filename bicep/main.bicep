@@ -1,39 +1,33 @@
-@description('Location for all networking resources')
+@description('Location')
 param location string = resourceGroup().location
 
-//
-// DEV VNet (má GatewaySubnet)
-//
-module vnetDev './vnet-dev.bicep' = {
-  name: 'vnetDev'
+@description('VNet name')
+param vnetName string = 'vnet-dev-eus-01'
+
+@description('VNet prefix')
+param vnetAddressPrefix string = '10.0.0.0/16'
+
+@description('Subnet name')
+param appSubnetName string = 'snet-dev-eus-web'
+
+@description('Subnet prefix')
+param appSubnetPrefix string = '10.0.0.0/24'
+
+@description('Gateway subnet prefix')
+param gatewaySubnetPrefix string = '10.0.255.0/27'
+
+module vnet './vnet.bicep' = {
+  name: 'vnetModule'
   params: {
-    vnetName: 'vnet-dev-eus-01'
-    vnetAddressPrefix: '10.0.0.0/16'
-    appSubnetName: 'snet-dev-eus-web'
-    appSubnetPrefix: '10.0.0.0/24'
-    gatewaySubnetPrefix: '10.0.255.0/27'
+    vnetName: vnetName
+    vnetAddressPrefix: vnetAddressPrefix
+    appSubnetName: appSubnetName
+    appSubnetPrefix: appSubnetPrefix
+    gatewaySubnetPrefix: gatewaySubnetPrefix
   }
 }
 
-//
-// TST VNet (bez GatewaySubnet)
-//
-module vnetTst './vnet-tst.bicep' = {
-  name: 'vnetTst'
-  params: {
-    vnetName: 'vnet-tst-eus-01'
-    vnetAddressPrefix: '10.1.0.0/16'
-    appSubnetName: 'snet-tst-eus-app'
-    appSubnetPrefix: '10.1.0.0/24'
-  }
-}
+output vnetId string = vnet.outputs.vnetId
+output appSubnetId string = vnet.outputs.appSubnetId
+output gatewaySubnetId string = vnet.outputs.gatewaySubnetId
 
-//
-// Outputs
-//
-output devVnetId string = vnetDev.outputs.vnetId
-output devAppSubnetId string = vnetDev.outputs.appSubnetId
-output devGatewaySubnetId string = vnetDev.outputs.gatewaySubnetId
-
-output tstVnetId string = vnetTst.outputs.vnetId
-output tstAppSubnetId string = vnetTst.outputs.appSubnetId
