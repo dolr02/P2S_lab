@@ -1,22 +1,19 @@
 @description('Name of the Virtual Network')
-param vnetName string = 'vnet-dev-eus-01'
+param vnetName string
 
 @description('Address space for the VNet')
-param vnetAddressPrefix string = '10.0.0.0/16'
-
-@description('Web subnet name')
-param webSubnetName string = 'snet-dev-eus-web'
-
-@description('Web subnet prefix')
-param webSubnetPrefix string = '10.0.0.0/24'
+param vnetAddressPrefix string
 
 @description('App subnet name')
-param appSubnetName string = 'snet-dev-eus-app'
+param appSubnetName string
 
 @description('App subnet prefix')
-param appSubnetPrefix string = '10.1.0.0/24'
+param appSubnetPrefix string
 
-resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
+@description('Gateway subnet prefix (must be named GatewaySubnet)')
+param gatewaySubnetPrefix string
+
+resource vnet 'Microsoft.Network/virtualNetworks@2025-01-01' = {
   name: vnetName
   location: resourceGroup().location
   properties: {
@@ -27,15 +24,15 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
     }
     subnets: [
       {
-        name: webSubnetName
-        properties: {
-          addressPrefix: webSubnetPrefix
-        }
-      }
-      {
         name: appSubnetName
         properties: {
           addressPrefix: appSubnetPrefix
+        }
+      }
+      {
+        name: 'GatewaySubnet'
+        properties: {
+          addressPrefix: gatewaySubnetPrefix
         }
       }
     ]
@@ -43,5 +40,15 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
 }
 
 output vnetId string = vnet.id
-output webSubnetId string = vnet.properties.subnets[0].id
-output appSubnetId string = vnet.properties.subnets[1].id
+
+output appSubnetId string = resourceId(
+  'Microsoft.Network/virtualNetworks/subnets',
+  vnetName,
+  appSubnetName
+)
+
+output gatewaySubnetId string = resourceId(
+  'Microsoft.Network/virtualNetworks/subnets',
+  vnetName,
+  'GatewaySubnet'
+)
