@@ -1,5 +1,4 @@
-New-AzResourceGroupDeployment `
-    -Name "networking-deployment" `
-    -ResourceGroupName "rg-p2s-lab" `
-    -TemplateFile "/home/radek/main.bicep" `
-    -location "eastus"
+az group create `
+  --name rg-p2s-lab `
+  --location eastus
+
