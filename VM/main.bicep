@@ -1,6 +1,7 @@
 param location string = resourceGroup().location
 param adminUsername string = 'azureuser'
-param sshPublicKey string
+@secure()
+param adminPassword string
 
 //
 // VNET
@@ -80,16 +81,9 @@ resource vmDev 'Microsoft.Compute/virtualMachines@2023-09-01' = {
     osProfile: {
       computerName: 'vm-dev'
       adminUsername: adminUsername
+      adminPassword: adminPassword
       linuxConfiguration: {
-        disablePasswordAuthentication: true
-        ssh: {
-          publicKeys: [
-            {
-              path: '/home/${adminUsername}/.ssh/authorized_keys'
-              keyData: sshPublicKey
-            }
-          ]
-        }
+        disablePasswordAuthentication: false
       }
     }
     storageProfile: {
@@ -126,16 +120,9 @@ resource vmTst 'Microsoft.Compute/virtualMachines@2023-09-01' = {
     osProfile: {
       computerName: 'vm-tst'
       adminUsername: adminUsername
+      adminPassword: adminPassword
       linuxConfiguration: {
-        disablePasswordAuthentication: true
-        ssh: {
-          publicKeys: [
-            {
-              path: '/home/${adminUsername}/.ssh/authorized_keys'
-              keyData: sshPublicKey
-            }
-          ]
-        }
+        disablePasswordAuthentication: false
       }
     }
     storageProfile: {
