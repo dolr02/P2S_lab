@@ -65,7 +65,7 @@ resource gwPip 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
     name: 'Standard'
   }
   properties: {
-    publicIPAllocationMethod: 'Dynamic'
+    publicIPAllocationMethod: 'Static'
   }
 }
 
