@@ -1,14 +1,22 @@
 param devVnetName string
 param devVnetAddressPrefix string
+param devAppSubnetName string
+param devAppSubnetPrefix string
+param devGatewaySubnetPrefix string
 
 param tstVnetName string
 param tstVnetAddressPrefix string
+param tstAppSubnetName string
+param tstAppSubnetPrefix string
 
 module devVnet './vnet-dev.bicep' = {
   name: 'devVnet'
   params: {
     vnetName: devVnetName
-    addressPrefix: devVnetAddressPrefix
+    vnetAddressPrefix: devVnetAddressPrefix
+    appSubnetName: devAppSubnetName
+    appSubnetPrefix: devAppSubnetPrefix
+    gatewaySubnetPrefix: devGatewaySubnetPrefix
   }
 }
 
@@ -16,6 +24,9 @@ module tstVnet './vnet-tst.bicep' = {
   name: 'tstVnet'
   params: {
     vnetName: tstVnetName
-    addressPrefix: tstVnetAddressPrefix
+    vnetAddressPrefix: tstVnetAddressPrefix
+    appSubnetName: tstAppSubnetName
+    appSubnetPrefix: tstAppSubnetPrefix
   }
 }
+
