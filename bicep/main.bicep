@@ -9,7 +9,7 @@ param tstVnetAddressPrefix string
 param tstAppSubnetName string
 param tstAppSubnetPrefix string
 
-module devVnet './vnet-dev.bicep' = {
+module dev './vnet-dev.bicep' = {
   name: 'devVnet'
   params: {
     vnetName: devVnetName
@@ -20,7 +20,7 @@ module devVnet './vnet-dev.bicep' = {
   }
 }
 
-module tstVnet './vnet-tst.bicep' = {
+module tst './vnet-tst.bicep' = {
   name: 'tstVnet'
   params: {
     vnetName: tstVnetName
@@ -29,4 +29,3 @@ module tstVnet './vnet-tst.bicep' = {
     appSubnetPrefix: tstAppSubnetPrefix
   }
 }
-
