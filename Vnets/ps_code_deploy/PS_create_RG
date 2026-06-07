@@ -1,0 +1,4 @@
+az group create `
+  --name rg-p2s-lab `
+  --location eastus
+
