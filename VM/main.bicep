@@ -1,4 +1,4 @@
-param location string = resourceGroup().location
+param location string = 'eastus'
 param adminUsername string = 'azureuser'
 @secure()
 param adminPassword string
@@ -7,7 +7,7 @@ param adminPassword string
 // VNET
 //
 resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
-  name: 'lab-vnet'
+  name: 'p2s-vnet'
   location: location
   properties: {
     addressSpace: {
