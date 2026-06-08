@@ -22,3 +22,4 @@ resource vnet 'Microsoft.Network/virtualNetworks@2025-01-01' = {
     ]
   }
 }
+

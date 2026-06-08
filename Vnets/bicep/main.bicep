@@ -33,3 +33,4 @@ module tst './vnet_tst.bicep' = {
     appSubnetPrefix: tstAppSubnetPrefix
   }
 }
+

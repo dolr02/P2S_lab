@@ -1,14 +1,14 @@
-param location string = resourceGroup().location
-
-param adminUsername string
 @secure()
 param adminPassword string
+param adminUsername string = 'azureuser'
 
-param devVnetName string
-param devSubnetName string
+param devVnetName string = 'vnet-dev-eus-01'
+param devSubnetName string = 'snet-dev-eus-01'
 
-param tstVnetName string
-param tstSubnetName string
+param tstVnetName string = 'vnet-tst-eus-01'
+param tstSubnetName string = 'snet-tst-eus-01'
+
+param location string = resourceGroup().location
 
 resource nicDev 'Microsoft.Network/networkInterfaces@2023-09-01' = {
   name: 'nic-dev-eus-01'
