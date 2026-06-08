@@ -1,0 +1,4 @@
+az deployment group create `
+  --resource-group rg-p2s-lab `
+  --template-file main.bicep `
+  --parameters adminPassword="TvojeHeslo123!"
