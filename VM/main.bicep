@@ -1,7 +1,4 @@
-param location string = 'eastus'
-param adminUsername string = 'azureuser'
-@secure()
-param adminPassword string
+param location string = resourceGroup().location
 
 //
 // DEV VNET
@@ -20,12 +17,6 @@ resource vnetDev 'Microsoft.Network/virtualNetworks@2023-09-01' = {
         name: 'snet-dev-eus-web'
         properties: {
           addressPrefix: '10.0.1.0/24'
-        }
-      }
-      {
-        name: 'GatewaySubnet'
-        properties: {
-          addressPrefix: '10.0.255.0/27'
         }
       }
     ]
@@ -56,58 +47,6 @@ resource vnetTst 'Microsoft.Network/virtualNetworks@2023-09-01' = {
 }
 
 //
-// Public IP for VPN Gateway
-//
-resource gwPip 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
-  name: 'pip-vpngw-eus-01'
-  location: location
-  sku: {
-    name: 'Standard'
-  }
-  properties: {
-    publicIPAllocationMethod: 'Static'
-  }
-}
-
-//
-// VPN Gateway
-//
-resource vpngw 'Microsoft.Network/virtualNetworkGateways@2023-09-01' = {
-  name: 'vpngw-dev-eus-01'
-  location: location
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'gwipconfig'
-        properties: {
-          privateIPAllocationMethod: 'Dynamic'
-          subnet: {
-            id: '${vnetDev.id}/subnets/GatewaySubnet'
-          }
-          publicIPAddress: {
-            id: gwPip.id
-          }
-        }
-      }
-    ]
-    gatewayType: 'Vpn'
-    vpnType: 'RouteBased'
-    enableBgp: false
-    sku: {
-      name: 'VpnGw1AZ'
-      tier: 'VpnGw1AZ'
-    }
-    vpnClientConfiguration: {
-      vpnClientAddressPool: {
-        addressPrefixes: [
-          '172.16.0.0/24'
-        ]
-      }
-    }
-  }
-}
-
-//
 // NIC DEV
 //
 resource nicDev 'Microsoft.Network/networkInterfaces@2023-09-01' = {
@@ -119,13 +58,20 @@ resource nicDev 'Microsoft.Network/networkInterfaces@2023-09-01' = {
         name: 'ipconfig1'
         properties: {
           subnet: {
-            id: '${vnetDev.id}/subnets/snet-dev-eus-web'
+            id: resourceId(
+              'Microsoft.Network/virtualNetworks/subnets',
+              'vnet-dev-eus-01',
+              'snet-dev-eus-web'
+            )
           }
           privateIPAllocationMethod: 'Dynamic'
         }
       }
     ]
   }
+  dependsOn: [
+    vnetDev
+  ]
 }
 
 //
@@ -140,17 +86,31 @@ resource nicTst 'Microsoft.Network/networkInterfaces@2023-09-01' = {
         name: 'ipconfig1'
         properties: {
           subnet: {
-            id: '${vnetTst.id}/subnets/snet-tst-eus-app'
+            id: resourceId(
+              'Microsoft.Network/virtualNetworks/subnets',
+              'vnet-tst-eus-01',
+              'snet-tst-eus-app'
+            )
           }
           privateIPAllocationMethod: 'Dynamic'
         }
       }
     ]
   }
+  dependsOn: [
+    vnetTst
+  ]
 }
 
 //
-// VM DEV
+// VM parameters
+//
+param adminUsername string = 'azureuser'
+@secure()
+param adminPassword string
+
+//
+// DEV VM
 //
 resource vmDev 'Microsoft.Compute/virtualMachines@2023-09-01' = {
   name: 'vm-dev-eus-01'
@@ -189,7 +149,7 @@ resource vmDev 'Microsoft.Compute/virtualMachines@2023-09-01' = {
 }
 
 //
-// VM TST
+// TST VM
 //
 resource vmTst 'Microsoft.Compute/virtualMachines@2023-09-01' = {
   name: 'vm-tst-eus-01'
