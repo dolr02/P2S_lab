@@ -1,21 +1,15 @@
 param location string = resourceGroup().location
 
-// VM parameters
-param adminUsername string = 'azureuser'
+param adminUsername string
 @secure()
 param adminPassword string
 
-// DEV subnet parameters
 param devVnetName string
 param devSubnetName string
 
-// TST subnet parameters
 param tstVnetName string
 param tstSubnetName string
 
-//
-// DEV NIC
-//
 resource nicDev 'Microsoft.Network/networkInterfaces@2023-09-01' = {
   name: 'nic-dev-eus-01'
   location: location
@@ -25,11 +19,7 @@ resource nicDev 'Microsoft.Network/networkInterfaces@2023-09-01' = {
         name: 'ipconfig1'
         properties: {
           subnet: {
-            id: resourceId(
-              'Microsoft.Network/virtualNetworks/subnets',
-              devVnetName,
-              devSubnetName
-            )
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', devVnetName, devSubnetName)
           }
           privateIPAllocationMethod: 'Dynamic'
         }
@@ -38,9 +28,6 @@ resource nicDev 'Microsoft.Network/networkInterfaces@2023-09-01' = {
   }
 }
 
-//
-// TST NIC
-//
 resource nicTst 'Microsoft.Network/networkInterfaces@2023-09-01' = {
   name: 'nic-tst-eus-01'
   location: location
@@ -50,11 +37,7 @@ resource nicTst 'Microsoft.Network/networkInterfaces@2023-09-01' = {
         name: 'ipconfig1'
         properties: {
           subnet: {
-            id: resourceId(
-              'Microsoft.Network/virtualNetworks/subnets',
-              tstVnetName,
-              tstSubnetName
-            )
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', tstVnetName, tstSubnetName)
           }
           privateIPAllocationMethod: 'Dynamic'
         }
@@ -63,9 +46,6 @@ resource nicTst 'Microsoft.Network/networkInterfaces@2023-09-01' = {
   }
 }
 
-//
-// DEV VM
-//
 resource vmDev 'Microsoft.Compute/virtualMachines@2023-09-01' = {
   name: 'vm-dev-eus-01'
   location: location
@@ -102,9 +82,6 @@ resource vmDev 'Microsoft.Compute/virtualMachines@2023-09-01' = {
   }
 }
 
-//
-// TST VM
-//
 resource vmTst 'Microsoft.Compute/virtualMachines@2023-09-01' = {
   name: 'vm-tst-eus-01'
   location: location

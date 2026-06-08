@@ -1,188 +1,23 @@
-param location string = resourceGroup().location
-
-//
-// DEV VNET
-//
-resource vnetDev 'Microsoft.Network/virtualNetworks@2023-09-01' = {
-  name: 'vnet-dev-eus-01'
-  location: location
-  properties: {
-    addressSpace: {
-      addressPrefixes: [
-        '10.0.0.0/16'
-      ]
-    }
-    subnets: [
-      {
-        name: 'snet-dev-eus-web'
-        properties: {
-          addressPrefix: '10.0.1.0/24'
-        }
-      }
-    ]
-  }
-}
-
-//
-// TST VNET
-//
-resource vnetTst 'Microsoft.Network/virtualNetworks@2023-09-01' = {
-  name: 'vnet-tst-eus-01'
-  location: location
-  properties: {
-    addressSpace: {
-      addressPrefixes: [
-        '10.1.0.0/16'
-      ]
-    }
-    subnets: [
-      {
-        name: 'snet-tst-eus-app'
-        properties: {
-          addressPrefix: '10.1.1.0/24'
-        }
-      }
-    ]
-  }
-}
-
-//
-// NIC DEV
-//
-resource nicDev 'Microsoft.Network/networkInterfaces@2023-09-01' = {
-  name: 'nic-dev-eus-01'
-  location: location
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          subnet: {
-            id: resourceId(
-              'Microsoft.Network/virtualNetworks/subnets',
-              'vnet-dev-eus-01',
-              'snet-dev-eus-web'
-            )
-          }
-          privateIPAllocationMethod: 'Dynamic'
-        }
-      }
-    ]
-  }
-  dependsOn: [
-    vnetDev
-  ]
-}
-
-//
-// NIC TST
-//
-resource nicTst 'Microsoft.Network/networkInterfaces@2023-09-01' = {
-  name: 'nic-tst-eus-01'
-  location: location
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          subnet: {
-            id: resourceId(
-              'Microsoft.Network/virtualNetworks/subnets',
-              'vnet-tst-eus-01',
-              'snet-tst-eus-app'
-            )
-          }
-          privateIPAllocationMethod: 'Dynamic'
-        }
-      }
-    ]
-  }
-  dependsOn: [
-    vnetTst
-  ]
-}
-
-//
-// VM parameters
-//
-param adminUsername string = 'azureuser'
 @secure()
 param adminPassword string
+param adminUsername string = 'azureuser'
 
-//
-// DEV VM
-//
-resource vmDev 'Microsoft.Compute/virtualMachines@2023-09-01' = {
-  name: 'vm-dev-eus-01'
-  location: location
-  properties: {
-    hardwareProfile: {
-      vmSize: 'Standard_B1s'
-    }
-    osProfile: {
-      computerName: 'vm-dev-eus-01'
-      adminUsername: adminUsername
-      adminPassword: adminPassword
-      linuxConfiguration: {
-        disablePasswordAuthentication: false
-      }
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'Canonical'
-        offer: '0001-com-ubuntu-server-jammy'
-        sku: '22_04-lts'
-        version: 'latest'
-      }
-      osDisk: {
-        createOption: 'FromImage'
-      }
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: nicDev.id
-        }
-      ]
-    }
-  }
-}
+param devVnetName string = 'vnet-dev-eus-01'
+param devSubnetName string = 'snet-dev-eus-01' // doplň správný název
 
-//
-// TST VM
-//
-resource vmTst 'Microsoft.Compute/virtualMachines@2023-09-01' = {
-  name: 'vm-tst-eus-01'
-  location: location
-  properties: {
-    hardwareProfile: {
-      vmSize: 'Standard_B1s'
-    }
-    osProfile: {
-      computerName: 'vm-tst-eus-01'
-      adminUsername: adminUsername
-      adminPassword: adminPassword
-      linuxConfiguration: {
-        disablePasswordAuthentication: false
-      }
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'Canonical'
-        offer: '0001-com-ubuntu-server-jammy'
-        sku: '22_04-lts'
-        version: 'latest'
-      }
-      osDisk: {
-        createOption: 'FromImage'
-      }
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: nicTst.id
-        }
-      ]
-    }
+param tstVnetName string = 'vnet-tst-eus-01'
+param tstSubnetName string = 'snet-tst-eus-01' // doplň správný název
+
+module vms './vm.bicep' = {
+  name: 'deployVMs'
+  params: {
+    adminPassword: adminPassword
+    adminUsername: adminUsername
+
+    devVnetName: devVnetName
+    devSubnetName: devSubnetName
+
+    tstVnetName: tstVnetName
+    tstSubnetName: tstSubnetName
   }
 }
