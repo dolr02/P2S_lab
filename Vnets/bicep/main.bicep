@@ -1,17 +1,17 @@
 // DEV params
 param devVnetName string = 'vnet-dev-eus-01'
 param devVnetAddressPrefix string = '10.0.0.0/16'
-param devAppSubnetName string = 'snet-dev-eus-web'
+param devAppSubnetName string = 'snet-dev-eus-01'
 param devAppSubnetPrefix string = '10.0.1.0/24'
 param devGatewaySubnetPrefix string = '10.0.254.0/27'
 
 // TST params
 param tstVnetName string = 'vnet-tst-eus-01'
 param tstVnetAddressPrefix string = '10.1.0.0/16'
-param tstAppSubnetName string = 'snet-tst-eus-app'
+param tstAppSubnetName string = 'snet-tst-eus-01'
 param tstAppSubnetPrefix string = '10.1.1.0/24'
 
-// DEV VNET (má GatewaySubnet)
+// DEV VNET
 module dev './vnet_dev.bicep' = {
   name: 'devVnet'
   params: {
@@ -23,7 +23,7 @@ module dev './vnet_dev.bicep' = {
   }
 }
 
-// TST VNET (bez GatewaySubnet)
+// TST VNET
 module tst './vnet_tst.bicep' = {
   name: 'tstVnet'
   params: {
