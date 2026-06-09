@@ -1,4 +1,8 @@
-az deployment group create `
-  --resource-group rg-p2s-lab `
-  --template-file gateway.bicep `
-  --parameters rootCertData="$(Get-Content ~/P2S_lab/cert_root -Raw)"
+az network vnet-gateway create \
+  --resource-group rg-p2s-lab \
+  --name vpngw-dev-eus-01 \
+  --public-ip-addresses pip-vpn-gateway \
+  --vnet vnet-dev-eus-01 \
+  --gateway-type Vpn \
+  --vpn-type RouteBased \
+  --sku VpnGw1AZ
