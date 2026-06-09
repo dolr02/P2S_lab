@@ -55,10 +55,10 @@ resource vpnGw 'Microsoft.Network/virtualNetworkGateways@2023-09-01' = {
     gatewayType: 'Vpn'
     vpnType: 'RouteBased'
     enableBgp: false
-    sku: {
-      name: 'VpnGw1'
-      tier: 'VpnGw1'
-    }
+   sku: {
+  name: 'VpnGw1AZ'
+  tier: 'VpnGw1AZ'
+}
     vpnClientConfiguration: {
       vpnClientAddressPool: {
         addressPrefixes: [
