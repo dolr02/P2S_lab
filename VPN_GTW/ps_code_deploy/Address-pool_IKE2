@@ -1,1 +1,6 @@
+az network vnet-gateway update \
+  --resource-group rg-p2s-lab \
+  --name vpngw-dev-eus-01 \
+  --set vpnClientConfiguration.vpn_client_address_pool.address_prefixes="[ '172.16.201.0/24' ]" \
+        vpnClientConfiguration.vpn_client_protocols="[ 'IKEv2', 'OpenVPN' ]"
 
