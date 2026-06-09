@@ -1,15 +1,6 @@
 param location string = resourceGroup().location
-
-// VNET + SUBNET
 param vnetName string = 'vnet-dev-eus-01'
 param gatewaySubnetName string = 'GatewaySubnet'
-
-// CERTIFIKÁT (root cert)
-param rootCertName string = 'P2SRootCert'
-param rootCertData string
-
-// P2S address pool
-param p2sPool string = '172.16.0.0/24'
 
 // Public IP pro VPN Gateway
 resource vpnPip 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
@@ -28,13 +19,13 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
   name: vnetName
 }
 
-// Reference to existing Gateway subnet
+// GatewaySubnet reference
 resource gatewaySubnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing = {
   parent: vnet
   name: gatewaySubnetName
 }
 
-// VPN Gateway
+// ČISTÁ VPN GATEWAY BEZ P2S
 resource vpnGw 'Microsoft.Network/virtualNetworkGateways@2023-09-01' = {
   name: 'vpngw-dev-eus-01'
   location: location
@@ -59,24 +50,6 @@ resource vpnGw 'Microsoft.Network/virtualNetworkGateways@2023-09-01' = {
       name: 'VpnGw1AZ'
       tier: 'VpnGw1AZ'
     }
-    vpnClientConfiguration: {
-      vpnClientAddressPool: {
-        addressPrefixes: [
-          p2sPool
-        ]
-      }
-      vpnClientRootCertificates: [
-        {
-          name: rootCertName
-          properties: {
-            publicCertData: rootCertData
-          }
-        }
-      ]
-      vpnClientProtocols: [
-        'OpenVPN',
-        'IKEv2'
-      ]
-    }
   }
 }
+
