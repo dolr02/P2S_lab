@@ -1,34 +1,19 @@
-param location string = resourceGroup().location
-param vnetName string = 'vnet-dev-eus-01'
-param gatewaySubnetName string = 'GatewaySubnet'
+param devVnetName string = 'vnet-dev-eus-01'
+param devResourceGroup string = 'rg-p2s-lab'
 
-// Public IP pro VPN Gateway
-resource vpnPip 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
-  name: 'pip-vpn-gateway'
-  location: location
-  sku: {
-    name: 'Standard'
-  }
-  properties: {
-    publicIPAllocationMethod: 'Static'
-  }
+resource devVnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
+  name: devVnetName
+  scope: resourceGroup(devResourceGroup)
 }
 
-// VNET reference
-resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
-  name: vnetName
-}
-
-// GatewaySubnet reference
 resource gatewaySubnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing = {
-  parent: vnet
-  name: gatewaySubnetName
+  parent: devVnet
+  name: 'GatewaySubnet'
 }
 
-// ČISTÁ VPN GATEWAY BEZ P2S
 resource vpnGw 'Microsoft.Network/virtualNetworkGateways@2023-09-01' = {
   name: 'vpngw-dev-eus-01'
-  location: location
+  location: resourceGroup().location
   properties: {
     ipConfigurations: [
       {
@@ -47,9 +32,10 @@ resource vpnGw 'Microsoft.Network/virtualNetworkGateways@2023-09-01' = {
     vpnType: 'RouteBased'
     enableBgp: false
     sku: {
-      name: 'VpnGw2AZ'
-      tier: 'VpnGw2AZ'
+      name: 'VpnGw1'
+      tier: 'VpnGw1'
     }
   }
 }
+
 
