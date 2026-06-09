@@ -1,1 +1,7 @@
+az network public-ip create \
+  --resource-group rg-p2s-lab \
+  --name pip-vpn-gateway \
+  --sku Standard \
+  --allocation-method Static \
+  --zone 1 2 3
 
