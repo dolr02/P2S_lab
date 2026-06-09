@@ -47,8 +47,8 @@ resource vpnGw 'Microsoft.Network/virtualNetworkGateways@2023-09-01' = {
     vpnType: 'RouteBased'
     enableBgp: false
     sku: {
-      name: 'VpnGw1AZ'
-      tier: 'VpnGw1AZ'
+      name: 'VpnGw2AZ'
+      tier: 'VpnGw2AZ'
     }
   }
 }
