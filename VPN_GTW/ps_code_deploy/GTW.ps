@@ -1,0 +1,4 @@
+az deployment group create \
+  -g rg-p2s-lab \
+  -f gateway.bicep \
+  --parameters rootCertData="$(cat ~/P2S_lab/cert_root)"
