@@ -30,9 +30,4 @@ resource vnet 'Microsoft.Network/virtualNetworks@2025-01-01' = {
   }
 }
 
-output devSubnetId string = vnet.properties.subnets[0].id
-output gatewaySubnetId string = vnet.properties.subnets[1].id
-<<<<<<< HEAD
-=======
-
 >>>>>>> 59515866fafb4cbd9ef8a6fd32e2169db003e886
