@@ -1,22 +1,17 @@
-param vnetName string
-param vnetAddressPrefix string
-param appSubnetName string
-param appSubnetPrefix string
-
 resource vnet 'Microsoft.Network/virtualNetworks@2025-01-01' = {
-  name: vnetName
+  name: 'vnet-tst-eus-01'
   location: resourceGroup().location
   properties: {
     addressSpace: {
       addressPrefixes: [
-        vnetAddressPrefix
+        '10.1.0.0/16'
       ]
     }
     subnets: [
       {
-        name: appSubnetName
+        name: 'snet-tst-eus-01'
         properties: {
-          addressPrefix: appSubnetPrefix
+          addressPrefix: '10.1.1.0/24'
         }
       }
     ]
@@ -24,5 +19,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2025-01-01' = {
 }
 
 output vnetName string = vnet.name
-output appSubnetName string = appSubnetName
+output appSubnetName string = 'snet-tst-eus-01'
+ppSubnetName
 
