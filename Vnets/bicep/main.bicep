@@ -14,6 +14,12 @@ resource devVnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
           addressPrefix: '10.0.1.0/24'
         }
       }
+      {
+        name: 'GatewaySubnet'
+        properties: {
+          addressPrefix: '10.0.254.0/27'
+        }
+      }
     ]
   }
 }
