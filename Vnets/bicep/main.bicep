@@ -1,9 +1,41 @@
-module dev './vnet_dev.bicep' = {
-  name: 'deployDevVnet'
+resource devVnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
+  name: 'vnet-dev'
+  location: resourceGroup().location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.0.0.0/16'
+      ]
+    }
+    subnets: [
+      {
+        name: 'subnet-dev'
+        properties: {
+          addressPrefix: '10.0.1.0/24'
+        }
+      }
+    ]
+  }
 }
 
-module tst './vnet_tst.bicep' = {
-  name: 'deployTstVnet'
+resource tstVnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
+  name: 'vnet-tst'
+  location: resourceGroup().location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.1.0.0/16'
+      ]
+    }
+    subnets: [
+      {
+        name: 'subnet-tst'
+        properties: {
+          addressPrefix: '10.1.1.0/24'
+        }
+      }
+    ]
+  }
 }
 
 
