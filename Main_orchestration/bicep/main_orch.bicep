@@ -12,14 +12,14 @@ param devResourceGroup string = 'rg-p2s-lab'
 param location string = resourceGroup().location
 
 //
-// VNETS – nemají parametry!
+// VNETS – nemají parametry
 //
 module vnets '../Vnets/bicep/main.bicep' = {
   name: 'deployVnets'
 }
 
 //
-// VMS – mají 6 parametrů, musíš je poslat
+// VMS – mají 6 parametrů
 //
 module vms '../VM/bicep/main.bicep' = {
   name: 'deployVMs'
@@ -46,4 +46,5 @@ module gateway '../VPN_GTW/bicep/GTW.bicep' = {
     location: location
   }
 }
+
 
