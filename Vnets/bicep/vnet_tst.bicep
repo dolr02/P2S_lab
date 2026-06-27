@@ -20,5 +20,4 @@ resource vnet 'Microsoft.Network/virtualNetworks@2025-01-01' = {
 
 output vnetName string = vnet.name
 output appSubnetName string = 'snet-tst-eus-01'
-ppSubnetName
 
