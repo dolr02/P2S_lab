@@ -24,4 +24,3 @@ resource vnet 'Microsoft.Network/virtualNetworks@2025-01-01' = {
 }
 
 output tstSubnetId string = vnet.properties.subnets[0].id
-
