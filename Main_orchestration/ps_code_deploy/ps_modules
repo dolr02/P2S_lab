@@ -1,4 +1,0 @@
-az deployment group create \
-  --resource-group rg-az700-dev-eus \
-  --template-file main.bicep \
-  --parameters main-dev.bicepparam
