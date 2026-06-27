@@ -34,3 +34,9 @@ module tst './vnet_tst.bicep' = {
   }
 }
 
+output devVnetName string = devVnetName
+output devSubnetName string = devAppSubnetName
+
+output tstVnetName string = tstVnetName
+output tstSubnetName string = tstAppSubnetName
+
