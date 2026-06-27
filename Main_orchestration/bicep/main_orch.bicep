@@ -17,5 +17,3 @@ module gateway '../VPN_GTW/bicep/GTW.bicep' = {
   }
 }
 
-
-
