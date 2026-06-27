@@ -1,5 +1,5 @@
 az deployment group create `
   --resource-group rg-p2s-lab `
   --template-file ./bicep/container.bicep `
-  --parameters storageAccountName="stp2slab"
+  --parameters storageAccountName="stp2slab6703"
 
