@@ -100,3 +100,7 @@ resource vmTst 'Microsoft.Compute/virtualMachines@2023-09-01' = {
     }
   }
 }
+
+output devVmName string = vmDev.name
+output tstVmName string = vmTst.name
+
