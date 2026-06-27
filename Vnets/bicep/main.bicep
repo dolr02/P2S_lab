@@ -1,5 +1,5 @@
 resource devVnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
-  name: 'vnet-dev'
+  name: 'vnet-dev-eus-01'
   location: resourceGroup().location
   properties: {
     addressSpace: {
@@ -9,7 +9,7 @@ resource devVnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
     }
     subnets: [
       {
-        name: 'subnet-dev'
+        name: 'snet-dev-eus-01'
         properties: {
           addressPrefix: '10.0.1.0/24'
         }
@@ -19,7 +19,7 @@ resource devVnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
 }
 
 resource tstVnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
-  name: 'vnet-tst'
+  name: 'vnet-tst-eus-01'
   location: resourceGroup().location
   properties: {
     addressSpace: {
@@ -29,7 +29,7 @@ resource tstVnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
     }
     subnets: [
       {
-        name: 'subnet-tst'
+        name: 'snet-tst-eus-01'
         properties: {
           addressPrefix: '10.1.1.0/24'
         }
