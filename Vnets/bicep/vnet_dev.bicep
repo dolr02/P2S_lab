@@ -30,4 +30,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2025-01-01' = {
   }
 }
 
->>>>>>> 59515866fafb4cbd9ef8a6fd32e2169db003e886
+output vnetName string = vnet.name
+output appSubnetName string = appSubnetName
+
