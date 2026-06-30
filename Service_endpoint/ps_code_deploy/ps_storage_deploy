@@ -1,6 +1,7 @@
- --resource-group rg-p2s-lab `
->>   --template-file ./bicep/main_storage.bicep `
->>   --parameters storageAccountName="stp2slab$((Get-Random -Maximum 99999))" `
->>                enableAdlsGen2=false `
->>                skuName="Standard_GRS" `
->>                location="eastus"
+az deployment group create `
+  --resource-group rg-p2s-lab `
+  --template-file ./bicep/main_storage.bicep `
+  --parameters storageAccountName="stp2slab$((Get-Random -Maximum 99999))" `
+               enableAdlsGen2=false `
+               skuName="Standard_GRS" `
+               location="eastus"
