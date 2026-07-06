@@ -17,7 +17,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' existing = {
 }
 
 
-// EXISTING PE SUBNET
+// EXISTING PRIVATE ENDPOINT SUBNET
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-11-01' existing = {
   parent: vnet
   name: subnetName
@@ -36,7 +36,7 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01' = {
 
     privateLinkServiceConnections: [
       {
-        name: '${saName}-blob-connection'
+        name: '${saName}-blob'
 
         properties: {
           privateLinkServiceId: storageAccount.id
@@ -51,17 +51,20 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01' = {
 }
 
 
-// PRIVATE DNS ZONE FOR STORAGE BLOB
+// PRIVATE DNS ZONE
 resource privateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   name: 'privatelink.blob.core.windows.net'
+  location: 'global'
 }
 
 
-// DNS LINK TO VNET
-resource privateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+// VNET LINK
+resource dnsLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
   name: '${vnetName}-link'
 
   parent: privateDnsZone
+
+  location: 'global'
 
   properties: {
     virtualNetwork: {
@@ -73,18 +76,17 @@ resource privateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLin
 }
 
 
-// CONNECT PRIVATE ENDPOINT WITH DNS ZONE
-resource privateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-11-01' = {
-
-  parent: privateEndpoint
+// DNS ZONE GROUP
+resource dnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-11-01' = {
 
   name: 'default'
 
-  properties: {
+  parent: privateEndpoint
 
+  properties: {
     privateDnsZoneConfigs: [
       {
-        name: 'blob-zone-config'
+        name: 'blob'
 
         properties: {
           privateDnsZoneId: privateDnsZone.id
