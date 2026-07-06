@@ -1,5 +1,22 @@
+# 1) Najdi storage account podle TAGU purpose = p2s-lab-storage
+$sa = az storage account list `
+    --resource-group rg-p2s-lab `
+    --query "[?tags.purpose=='p2s-lab-storage']" `
+    -o json | ConvertFrom-Json
+
+if (-not $sa) {
+    Write-Error "Nenalezen žádný Storage Account s tagem purpose=p2s-lab-storage"
+    exit 1
+}
+
+$saName = $sa[0].name
+Write-Host "Nalezený Storage Account: $saName"
+
+# 2) Deploy container do EXISTUJÍCÍHO storage accountu
 az deployment group create `
   --resource-group rg-p2s-lab `
-  --template-file /home/radek/P2S_lab/Service_endpoint/bicep/container.bicep
+  --template-file /home/radek/P2S_lab/Service_endpoint/bicep/container.bicep `
+  --parameters saName=$saName
+
 
 
