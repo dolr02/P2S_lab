@@ -1,4 +1,4 @@
 az storage account update `
-  -n stp2slab `
+  -n stp2slab55815 `
   -g rg-p2s-lab `
   --set tags.purpose="p2s-lab-storage"
