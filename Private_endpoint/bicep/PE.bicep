@@ -14,7 +14,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' existing = {
   name: vnetName
 }
 
-// EXISTING SUBNET (must be PE enabled subnet)
+// EXISTING SUBNET (must be PE enabled)
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-11-01' existing = {
   name: subnetName
   parent: vnet
@@ -42,13 +42,13 @@ resource pe 'Microsoft.Network/privateEndpoints@2023-11-01' = {
   }
 }
 
-// PRIVATE DNS ZONE
+// PRIVATE DNS ZONE (NO A RECORDS!)
 resource dnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   name: 'privatelink.blob.core.windows.net'
   location: 'global'
 }
 
-// LINK DNS TO VNET
+// LINK DNS ZONE TO VNET
 resource dnsLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
   name: '${vnetName}-dns-link'
   parent: dnsZone
