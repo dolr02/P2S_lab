@@ -1,12 +1,3 @@
-@description('Name of the existing Storage Account')
-param saName string
-
-@description('Name of the existing Virtual Network')
-param vnetName string = 'vnet-dev-eus-01'
-
-@description('Name of the existing Subnet for Private Endpoint')
-param subnetName string
-
 @description('Location')
 param location string = 'eastus'
 
@@ -60,7 +51,7 @@ resource dnsLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-
 }
 
 resource dnsRecord 'Microsoft.Network/privateDnsZones/A@2020-06-01' = {
-  name: '${saName}'
+  name: saName
   parent: dnsZone
   properties: {
     ttl: 3600
