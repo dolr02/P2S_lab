@@ -1,4 +1,8 @@
-az deployment group create \
-  --resource-group rg-p2s-lab \
-  --template-file PE.bicep \
-  --parameters storageAccountName=stp2slab1376
+az deployment group create `
+  --resource-group rg-p2s-lab `
+  --template-file PE.bicep `
+  --parameters `
+      location=eastus `
+      saName=stp2slab1376 `
+      vnetName=vnet-dev-eus-01 `
+      subnetName=PE-subnet
