@@ -12,4 +12,3 @@ resource scriptsContainer 'Microsoft.Storage/storageAccounts/blobServices/contai
   }
 }
 
-
