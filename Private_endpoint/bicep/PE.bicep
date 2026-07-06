@@ -10,16 +10,12 @@ param subnetName string
 @description('Location')
 param location string = 'eastus'
 
-@description('Resource Group of existing VNET')
-param vnetRg string = 'rg-p2s-lab'
-
 resource sa 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
   name: saName
 }
 
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
   name: vnetName
-  scope: resourceGroup(vnetRg)
 }
 
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' existing = {
@@ -50,7 +46,6 @@ resource pe 'Microsoft.Network/privateEndpoints@2023-05-01' = {
 
 resource dnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' existing = {
   name: 'privatelink.blob.core.windows.net'
-  scope: resourceGroup(vnetRg)
 }
 
 resource dnsLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
