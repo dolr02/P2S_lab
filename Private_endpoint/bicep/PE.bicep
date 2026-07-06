@@ -14,7 +14,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' existing = {
   name: vnetName
 }
 
-// EXISTING SUBNET
+// EXISTING SUBNET (must be PE enabled subnet)
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-11-01' existing = {
   name: subnetName
   parent: vnet
@@ -22,7 +22,7 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-11-01' existing 
 
 // PRIVATE ENDPOINT
 resource pe 'Microsoft.Network/privateEndpoints@2023-11-01' = {
-  name: '${sa.name}-pe'
+  name: '${saName}-pe'
   location: location
   properties: {
     subnet: {
@@ -30,7 +30,7 @@ resource pe 'Microsoft.Network/privateEndpoints@2023-11-01' = {
     }
     privateLinkServiceConnections: [
       {
-        name: '${sa.name}-blob-conn'
+        name: '${saName}-blob-conn'
         properties: {
           privateLinkServiceId: sa.id
           groupIds: [
@@ -48,9 +48,9 @@ resource dnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   location: 'global'
 }
 
-// LINK VNET -> DNS ZONE
+// LINK DNS TO VNET
 resource dnsLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
-  name: '${vnet.name}-dns-link'
+  name: '${vnetName}-dns-link'
   parent: dnsZone
   properties: {
     virtualNetwork: {
@@ -60,14 +60,14 @@ resource dnsLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-
   }
 }
 
-// DNS ZONE GROUP (AUTO A RECORD)
+// DNS ZONE GROUP (THIS CREATES A RECORD AUTOMATICALLY)
 resource zoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-11-01' = {
   name: 'default'
   parent: pe
   properties: {
     privateDnsZoneConfigs: [
       {
-        name: 'blob-dns'
+        name: 'blob-config'
         properties: {
           privateDnsZoneId: dnsZone.id
         }
