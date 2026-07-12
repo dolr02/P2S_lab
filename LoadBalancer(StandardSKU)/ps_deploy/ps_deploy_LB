@@ -1,3 +1,4 @@
-az deployment group create \
--g rg-p2s-lab \
--f LB_bicep.bicep
+az deployment group create `
+-g rg-az700-dev-eus `
+-f LB_bicep.bicep `
+--parameters pipName="pip-dev-eus-lb-01"
