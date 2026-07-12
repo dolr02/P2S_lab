@@ -1,11 +1,10 @@
-@description('Name of Public IP')
+@description('Public IP name')
 param pipName string
 
-@description('Location')
 param location string = resourceGroup().location
 
 
-// Public IP
+// Public IP - Standard SKU
 resource pip 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
   name: pipName
   location: location
@@ -20,7 +19,7 @@ resource pip 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
 }
 
 
-// Load Balancer
+// Standard Load Balancer
 resource lb 'Microsoft.Network/loadBalancers@2023-09-01' = {
   name: 'lb-dev-eus-01'
   location: location
@@ -80,6 +79,7 @@ resource lb 'Microsoft.Network/loadBalancers@2023-09-01' = {
             )
           }
 
+
           backendAddressPool: {
             id: resourceId(
               'Microsoft.Network/loadBalancers/backendAddressPools',
@@ -87,6 +87,7 @@ resource lb 'Microsoft.Network/loadBalancers@2023-09-01' = {
               'be-az700-eus-dev-01'
             )
           }
+
 
           probe: {
             id: resourceId(
@@ -102,8 +103,7 @@ resource lb 'Microsoft.Network/loadBalancers@2023-09-01' = {
           backendPort: 80
 
 
-          // IMPORTANT:
-          // because same frontend IP is used by outbound rule
+          // IMPORTANT FOR STANDARD LB + OUTBOUND RULE
           disableOutboundSnat: true
 
           enableFloatingIP: false
@@ -119,6 +119,20 @@ resource lb 'Microsoft.Network/loadBalancers@2023-09-01' = {
 
         properties: {
 
+          allocatedOutboundPorts: 1024
+
+          protocol: 'All'
+
+
+          backendAddressPool: {
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/backendAddressPools',
+              'lb-dev-eus-01',
+              'be-az700-eus-dev-01'
+            )
+          }
+
+
           frontendIPConfigurations: [
             {
               id: resourceId(
@@ -129,17 +143,6 @@ resource lb 'Microsoft.Network/loadBalancers@2023-09-01' = {
             }
           ]
 
-          backendAddressPool: {
-            id: resourceId(
-              'Microsoft.Network/loadBalancers/backendAddressPools',
-              'lb-dev-eus-01',
-              'be-az700-eus-dev-01'
-            )
-          }
-
-          protocol: 'All'
-
-          allocatedOutboundPorts: 1024
 
           idleTimeoutInMinutes: 15
         }
