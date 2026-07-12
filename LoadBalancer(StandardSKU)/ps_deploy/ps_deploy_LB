@@ -1,4 +1,5 @@
 az deployment group create `
--g rg-az700-dev-eus `
--f LB_bicep.bicep `
---parameters pipName="pip-dev-eus-lb-01"
+  --resource-group rg-p2s-lab `
+  --template-file LB_bicep.bicep `
+  --parameters pipName="pip-dev-eus-lb-01"
+
