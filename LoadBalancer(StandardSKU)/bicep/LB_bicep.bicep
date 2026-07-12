@@ -10,8 +10,8 @@ param outboundRuleName string = 'or-dev-eus-01'
 
 @description('NIC IDs to attach to backend pool')
 param nicIds array = [
-  '/subscriptions/<SUB>/resourceGroups/rg-az700-dev-eus/providers/Microsoft.Network/networkInterfaces/vm-dev-web-01-nic/ipConfigurations/ipconfig1',
-  '/subscriptions/<SUB>/resourceGroups/rg-az700-dev-eus/providers/Microsoft.Network/networkInterfaces/vm-dev-web-02-nic/ipConfigurations/ipconfig1'
+  '/subscriptions/<SUB>/resourceGroups/rg-az700-dev-eus/providers/Microsoft.Network/networkInterfaces/vm-dev-web-01-nic',
+  '/subscriptions/<SUB>/resourceGroups/rg-az700-dev-eus/providers/Microsoft.Network/networkInterfaces/vm-dev-web-02-nic'
 ]
 
 resource pip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
@@ -46,13 +46,6 @@ resource lb 'Microsoft.Network/loadBalancers@2022-05-01' = {
     backendAddressPools: [
       {
         name: bepName
-        properties: {
-          backendIPConfigurations: [
-            for nicId in nicIds: {
-              id: nicId
-            }
-          ]
-        }
       }
     ]
 
@@ -77,7 +70,7 @@ resource lb 'Microsoft.Network/loadBalancers@2022-05-01' = {
           enableFloatingIP: false
           loadDistribution: 'Default'
 
-          disableOutboundSNAT: true
+          disableOutboundSnat: true
 
           frontendIPConfiguration: {
             id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', lbName, feName)
