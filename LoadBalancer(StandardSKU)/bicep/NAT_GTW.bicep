@@ -31,7 +31,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
   name: 'vnet-dev-eus-01'
 }
 
-// EXISTING SUBNET — YOU MUST ATTACH NAT HERE
+// EXISTING SUBNET — THIS ONE EXISTS IN YOUR VNET
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' existing = {
   name: 'snet-dev-eus-web'
   parent: vnet
