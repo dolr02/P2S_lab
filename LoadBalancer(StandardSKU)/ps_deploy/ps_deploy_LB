@@ -1,4 +1,4 @@
 az deployment group create \
   --resource-group rg-az700-dev-eus \
-  --template-file LB_bicep.bicep
+  --template-file LB_bicep
 

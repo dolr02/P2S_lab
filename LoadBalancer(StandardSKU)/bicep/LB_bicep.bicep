@@ -1,49 +1,13 @@
-@description('Location, e.g. eastus')
 param location string = 'eastus'
+param lbName string = 'lb-az700-dev-eus-01'
+param frontendName string = 'fe-az700-dev-eus-01'
+param backendPoolName string = 'be-az700-dev-eus-01'
+param lbrName string = 'lbr-az700-dev-eus-01'
+param outboundRuleName string = 'or-az700-dev-eus-01'
+param probeName string = 'prb-az700-dev-eus-01'
 
-@description('Name of the Load Balancer')
-param lbName string = 'lb-dev-eus-01'
-
-@description('Name of Public IP for LB frontend')
-param pipName string = 'pip-dev-eus-lb-01'
-
-@description('Backend addresses (existing VM private IPs)')
-param backendAddresses array = [
-  {
-    name: 'vm-dev-web-01-backend'
-    ipAddress: '10.0.0.4'
-  }
-  {
-    name: 'vm-dev-web-02-backend'
-    ipAddress: '10.0.0.5'
-  }
-]
-
-@description('Frontend IP config name')
-param feName string = 'fe-az700-eus-dev-01'
-
-@description('Backend pool name')
-param bepName string = 'bep-az700-eus-dev-01'
-
-@description('Health probe name')
-param probeName string = 'hp-dev-eus-01'
-
-@description('LB rule name')
-param lbRuleName string = 'lbr-az700-eus-dev-01'
-
-@description('Outbound rule name')
-param outboundRuleName string = 'or-az700-eus-dev-01'
-
-resource pip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
-  name: pipName
-  location: location
-  sku: {
-    name: 'Standard'
-  }
-  properties: {
-    publicIPAllocationMethod: 'Static'
-  }
-}
+@description('Resource ID veřejné IP adresy pro frontend LB')
+param pipId string
 
 resource lb 'Microsoft.Network/loadBalancers@2022-05-01' = {
   name: lbName
@@ -54,76 +18,96 @@ resource lb 'Microsoft.Network/loadBalancers@2022-05-01' = {
   properties: {
     frontendIPConfigurations: [
       {
-        name: feName
+        name: frontendName
         properties: {
           publicIPAddress: {
-            id: pip.id
+            id: pipId
           }
         }
       }
     ]
+
     backendAddressPools: [
       {
-        name: bepName
-        properties: {
-          loadBalancerBackendAddresses: [
-            for addr in backendAddresses: {
-              name: addr.name
-              properties: {
-                ipAddress: addr.ipAddress
-              }
-            }
-          ]
-        }
+        name: backendPoolName
       }
     ]
+
     probes: [
       {
         name: probeName
         properties: {
           protocol: 'Tcp'
           port: 80
-          intervalInSeconds: 5
-          numberOfProbes: 2
         }
       }
     ]
+
     loadBalancingRules: [
       {
-        name: lbRuleName
+        name: lbrName
         properties: {
           protocol: 'Tcp'
           frontendPort: 80
           backendPort: 80
-          idleTimeoutInMinutes: 4
           enableFloatingIP: false
+          idleTimeoutInMinutes: 4
           loadDistribution: 'Default'
+
           frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', lbName, feName)
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/frontendIPConfigurations',
+              lbName,
+              frontendName
+            )
           }
+
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', lbName, bepName)
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/backendAddressPools',
+              lbName,
+              backendPoolName
+            )
           }
+
           probe: {
-            id: resourceId('Microsoft.Network/loadBalancers/probes', lbName, probeName)
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/probes',
+              lbName,
+              probeName
+            )
           }
+
+          // ⭐ Povinné, protože sdílíš frontend IP s outbound rule
+          disableOutboundSNAT: true
         }
       }
     ]
+
     outboundRules: [
       {
         name: outboundRuleName
         properties: {
           protocol: 'All'
           allocatedOutboundPorts: 1024
+
+          backendAddressPool: {
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/backendAddressPools',
+              lbName,
+              backendPoolName
+            )
+          }
+
           frontendIPConfigurations: [
             {
-              id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', lbName, feName)
+              id: resourceId(
+                'Microsoft.Network/loadBalancers/frontendIPConfigurations',
+                lbName,
+                frontendName
+              )
             }
           ]
-          backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', lbName, bepName)
-          }
         }
       }
     ]
