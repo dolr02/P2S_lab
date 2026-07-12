@@ -1,26 +1,54 @@
 ```mermaid
 flowchart LR
-    Client[Internet Client<br/>HTTP Request :80]
 
-    PIP[Azure Public IP<br/>Standard SKU]
-    LB[Azure Load Balancer<br/>Standard SKU<br/>Frontend IP Configuration<br/>Load Balancing Rule :80<br/>Health Probe TCP :80]
-    BE[Backend Pool]
+    subgraph Internet
+        Client[Internet Client<br/>HTTP Request :80]
+    end
 
-    VM1[Virtual Machine 01<br/>NIC<br/>Private IP<br/>Web Server<br/>Nginx :80]
-    VM2[Virtual Machine 02<br/>NIC<br/>Private IP<br/>Web Server<br/>Nginx :80]
+    subgraph Public
+        PIP[Public IP<br/>Standard SKU]
+    end
 
-    NSG[Network Security Group<br/>Allow TCP 80<br/>Allow AzureLoadBalancer Probe]
+    subgraph LB["Azure Load Balancer<br/>Standard SKU"]
+        LBF[Frontend IP Config]
+        LBR[Load Balancing Rule :80]
+        LBP[Health Probe TCP :80]
+        BE[Backend Pool]
+    end
 
+    subgraph Compute["Virtual Machines"]
+        VM1[VM1<br/>NIC<br/>Private IP<br/>Nginx :80]
+        VM2[VM2<br/>NIC<br/>Private IP<br/>Nginx :80]
+    end
+
+    subgraph Security["Network Security Group"]
+        NSG[NSG<br/>Allow TCP 80<br/>Allow AzureLoadBalancer Probe]
+    end
+
+    subgraph NAT["NAT Gateway"]
+        NATPIP[NAT Public IP<br/>Static]
+        NGW[NAT Gateway<br/>Outbound SNAT]
+    end
+
+    %% Inbound flow
     Client -->|TCP 80| PIP
-    PIP --> LB
-    LB -->|Load balancing rule| BE
+    PIP --> LBF
+    LBF --> LBR
+    LBR --> BE
 
     BE --> VM1
     BE --> VM2
 
-    LB -->|Health Probe TCP 80| VM1
-    LB -->|Health Probe TCP 80| VM2
+    LBP --> VM1
+    LBP --> VM2
 
     NSG --> VM1
     NSG --> VM2
+
+    %% Outbound flow
+    VM1 --> NGW
+    VM2 --> NGW
+    NGW --> NATPIP
+    NATPIP --> Internet
 ```
+
