@@ -19,9 +19,6 @@ param probeName string = 'hp-dev-eus-01'
 @description('LB rule name')
 param lbRuleName string = 'lbr-dev-eus-01'
 
-@description('Outbound rule name')
-param outboundRuleName string = 'or-dev-eus-01'
-
 @description('Backend addresses (existing VM private IPs)')
 param backendAddresses array = [
   {
@@ -102,9 +99,6 @@ resource lb 'Microsoft.Network/loadBalancers@2022-05-01' = {
           enableFloatingIP: false
           loadDistribution: 'Default'
 
-          // ⭐ POVINNÉ, protože sdílíš frontend IP s outbound rule
-          disableOutboundSnat: true
-
           frontendIPConfiguration: {
             id: resourceId(
               'Microsoft.Network/loadBalancers/frontendIPConfigurations',
@@ -124,34 +118,6 @@ resource lb 'Microsoft.Network/loadBalancers@2022-05-01' = {
               'Microsoft.Network/loadBalancers/probes',
               lbName,
               probeName
-            )
-          }
-        }
-      }
-    ]
-
-    outboundRules: [
-      {
-        name: outboundRuleName
-        properties: {
-          protocol: 'All'
-          allocatedOutboundPorts: 1024
-
-          frontendIPConfigurations: [
-            {
-              id: resourceId(
-                'Microsoft.Network/loadBalancers/frontendIPConfigurations',
-                lbName,
-                feName
-              )
-            }
-          ]
-
-          backendAddressPool: {
-            id: resourceId(
-              'Microsoft.Network/loadBalancers/backendAddressPools',
-              lbName,
-              bepName
             )
           }
         }
