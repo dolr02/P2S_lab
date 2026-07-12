@@ -1,4 +1,5 @@
 az deployment group create `
   --resource-group rg-p2s-lab `
-  --template-file vm-new.bicep `
+  --template-file "/home/radek/P2S_lab/LoadBalancer(StandardSKU)/bicep/VM_Vnet.bicep" `
   --parameters adminPassword="TvojeHeslo123!"
+
