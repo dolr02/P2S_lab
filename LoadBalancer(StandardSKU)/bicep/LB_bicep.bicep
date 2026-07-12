@@ -1,34 +1,17 @@
-@description('Location, e.g. eastus')
 param location string = 'eastus'
 
-@description('Name of the Load Balancer')
 param lbName string = 'lb-dev-eus-01'
-
-@description('Name of Public IP for LB frontend')
 param pipName string = 'pip-dev-eus-lb-01'
-
-@description('Frontend IP config name')
 param feName string = 'fe-dev-eus-01'
-
-@description('Backend pool name')
 param bepName string = 'bep-dev-eus-01'
-
-@description('Health probe name')
 param probeName string = 'hp-dev-eus-01'
-
-@description('LB rule name')
 param lbRuleName string = 'lbr-dev-eus-01'
+param outboundRuleName string = 'or-dev-eus-01'
 
-@description('Backend addresses (existing VM private IPs)')
-param backendAddresses array = [
-  {
-    name: 'vm-dev-web-01-backend'
-    ipAddress: '10.0.0.4'
-  }
-  {
-    name: 'vm-dev-web-02-backend'
-    ipAddress: '10.0.0.5'
-  }
+@description('NIC IDs to attach to backend pool')
+param nicIds array = [
+  '/subscriptions/<SUB>/resourceGroups/rg-az700-dev-eus/providers/Microsoft.Network/networkInterfaces/vm-dev-web-01-nic/ipConfigurations/ipconfig1',
+  '/subscriptions/<SUB>/resourceGroups/rg-az700-dev-eus/providers/Microsoft.Network/networkInterfaces/vm-dev-web-02-nic/ipConfigurations/ipconfig1'
 ]
 
 resource pip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
@@ -64,12 +47,9 @@ resource lb 'Microsoft.Network/loadBalancers@2022-05-01' = {
       {
         name: bepName
         properties: {
-          loadBalancerBackendAddresses: [
-            for addr in backendAddresses: {
-              name: addr.name
-              properties: {
-                ipAddress: addr.ipAddress
-              }
+          backendIPConfigurations: [
+            for nicId in nicIds: {
+              id: nicId
             }
           ]
         }
@@ -82,8 +62,6 @@ resource lb 'Microsoft.Network/loadBalancers@2022-05-01' = {
         properties: {
           protocol: 'Tcp'
           port: 80
-          intervalInSeconds: 5
-          numberOfProbes: 2
         }
       }
     ]
@@ -99,26 +77,36 @@ resource lb 'Microsoft.Network/loadBalancers@2022-05-01' = {
           enableFloatingIP: false
           loadDistribution: 'Default'
 
+          disableOutboundSNAT: true
+
           frontendIPConfiguration: {
-            id: resourceId(
-              'Microsoft.Network/loadBalancers/frontendIPConfigurations',
-              lbName,
-              feName
-            )
+            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', lbName, feName)
           }
           backendAddressPool: {
-            id: resourceId(
-              'Microsoft.Network/loadBalancers/backendAddressPools',
-              lbName,
-              bepName
-            )
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', lbName, bepName)
           }
           probe: {
-            id: resourceId(
-              'Microsoft.Network/loadBalancers/probes',
-              lbName,
-              probeName
-            )
+            id: resourceId('Microsoft.Network/loadBalancers/probes', lbName, probeName)
+          }
+        }
+      }
+    ]
+
+    outboundRules: [
+      {
+        name: outboundRuleName
+        properties: {
+          protocol: 'All'
+          allocatedOutboundPorts: 1024
+
+          frontendIPConfigurations: [
+            {
+              id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', lbName, feName)
+            }
+          ]
+
+          backendAddressPool: {
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', lbName, bepName)
           }
         }
       }
