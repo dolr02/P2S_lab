@@ -25,14 +25,14 @@ resource natGateway 'Microsoft.Network/natGateways@2023-05-01' = {
 }
 
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
-  name: 'vnet-az700-eus-dev'   // ← UPRAV SI
+  name: 'vnet-dev-eus-01'
 }
 
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
-  name: 'dev-subnet'           // ← UPRAV SI
+  name: 'snet-dev-eus-web'
   parent: vnet
   properties: {
-    addressPrefix: vnet.properties.addressSpace.addressPrefixes[0]
+    addressPrefix: '10.0.1.0/24'
     natGateway: {
       id: natGateway.id
     }
