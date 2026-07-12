@@ -1,21 +1,29 @@
-param location string = 'eastus'
-
+@description('Name of Load Balancer')
 param lbName string = 'lb-dev-eus-01'
-param pipName string = 'pip-dev-eus-lb-01'
-param feName string = 'fe-dev-eus-01'
-param bepName string = 'bep-dev-eus-01'
-param probeName string = 'hp-dev-eus-01'
-param lbRuleName string = 'lbr-dev-eus-01'
-param outboundRuleName string = 'or-dev-eus-01'
 
-@description('NIC IDs to attach to backend pool')
-param nicIds array = [
-  '/subscriptions/<SUB>/resourceGroups/rg-az700-dev-eus/providers/Microsoft.Network/networkInterfaces/vm-dev-web-01-nic',
-  '/subscriptions/<SUB>/resourceGroups/rg-az700-dev-eus/providers/Microsoft.Network/networkInterfaces/vm-dev-web-02-nic'
-]
+@description('Public IP name')
+param publicIpName string = 'pip-lb-dev-eus-01'
 
-resource pip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
-  name: pipName
+@description('Existing NIC names')
+param nicDevName string = 'nic-dev-eus-01'
+param nicTstName string = 'nic-tst-eus-01'
+
+param location string = resourceGroup().location
+
+
+// Existing NICs
+resource nicDev 'Microsoft.Network/networkInterfaces@2023-09-01' existing = {
+  name: nicDevName
+}
+
+resource nicTst 'Microsoft.Network/networkInterfaces@2023-09-01' existing = {
+  name: nicTstName
+}
+
+
+// Public IP for Load Balancer
+resource publicIp 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
+  name: publicIpName
   location: location
   sku: {
     name: 'Standard'
@@ -25,84 +33,156 @@ resource pip 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
   }
 }
 
-resource lb 'Microsoft.Network/loadBalancers@2022-05-01' = {
+
+// Standard Load Balancer
+resource lb 'Microsoft.Network/loadBalancers@2023-09-01' = {
   name: lbName
   location: location
+
   sku: {
     name: 'Standard'
   }
+
   properties: {
+
     frontendIPConfigurations: [
       {
-        name: feName
+        name: 'frontend-ip'
+
         properties: {
           publicIPAddress: {
-            id: pip.id
+            id: publicIp.id
           }
         }
       }
     ]
+
 
     backendAddressPools: [
       {
-        name: bepName
+        name: 'backend-pool'
       }
     ]
+
 
     probes: [
       {
-        name: probeName
+        name: 'tcp-probe-80'
+
         properties: {
           protocol: 'Tcp'
           port: 80
+          intervalInSeconds: 15
+          numberOfProbes: 2
         }
       }
     ]
+
 
     loadBalancingRules: [
       {
-        name: lbRuleName
+        name: 'http-rule'
+
         properties: {
+
+          frontendIPConfiguration: {
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/frontendIPConfigurations',
+              lbName,
+              'frontend-ip'
+            )
+          }
+
+          backendAddressPool: {
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/backendAddressPools',
+              lbName,
+              'backend-pool'
+            )
+          }
+
+          probe: {
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/probes',
+              lbName,
+              'tcp-probe-80'
+            )
+          }
+
           protocol: 'Tcp'
           frontendPort: 80
           backendPort: 80
-          idleTimeoutInMinutes: 4
+
           enableFloatingIP: false
-          loadDistribution: 'Default'
-
-          disableOutboundSnat: true
-
-          frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', lbName, feName)
-          }
-          backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', lbName, bepName)
-          }
-          probe: {
-            id: resourceId('Microsoft.Network/loadBalancers/probes', lbName, probeName)
-          }
-        }
-      }
-    ]
-
-    outboundRules: [
-      {
-        name: outboundRuleName
-        properties: {
-          protocol: 'All'
-          allocatedOutboundPorts: 1024
-
-          frontendIPConfigurations: [
-            {
-              id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', lbName, feName)
-            }
-          ]
-
-          backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', lbName, bepName)
-          }
+          idleTimeoutInMinutes: 4
         }
       }
     ]
   }
 }
+
+
+// Attach NICs to backend pool
+resource nicDevUpdate 'Microsoft.Network/networkInterfaces@2023-09-01' = {
+  name: nicDevName
+
+  properties: {
+
+    ipConfigurations: [
+      {
+        name: nicDev.properties.ipConfigurations[0].name
+
+        properties: {
+
+          loadBalancerBackendAddressPools: [
+            {
+              id: resourceId(
+                'Microsoft.Network/loadBalancers/backendAddressPools',
+                lbName,
+                'backend-pool'
+              )
+            }
+          ]
+
+          subnet: nicDev.properties.ipConfigurations[0].properties.subnet
+          privateIPAddress: nicDev.properties.ipConfigurations[0].properties.privateIPAddress
+          privateIPAllocationMethod: 'Dynamic'
+        }
+      }
+    ]
+  }
+}
+
+
+resource nicTstUpdate 'Microsoft.Network/networkInterfaces@2023-09-01' = {
+  name: nicTstName
+
+  properties: {
+
+    ipConfigurations: [
+      {
+        name: nicTst.properties.ipConfigurations[0].name
+
+        properties: {
+
+          loadBalancerBackendAddressPools: [
+            {
+              id: resourceId(
+                'Microsoft.Network/loadBalancers/backendAddressPools',
+                lbName,
+                'backend-pool'
+              )
+            }
+          ]
+
+          subnet: nicTst.properties.ipConfigurations[0].properties.subnet
+          privateIPAddress: nicTst.properties.ipConfigurations[0].properties.privateIPAddress
+          privateIPAllocationMethod: 'Dynamic'
+        }
+      }
+    ]
+  }
+}
+
+
+output loadBalancerPublicIP string = publicIp.properties.ipAddress
