@@ -1,39 +1,49 @@
+targetScope = 'resourceGroup'
+
 param location string = resourceGroup().location
 
-@description('Resource ID of existing Internal Load Balancer frontend IP configuration')
-param ilbFrontendId string
+@description('Existing VNet name')
+param vnetName string = 'vnet-dev-eus-01'
 
-@description('Subnet ID dedicated for Private Link Service')
-param plsSubnetId string
+@description('Resource ID of existing Internal Load Balancer Frontend IP Configuration')
+param ilbFrontendId string
 
 @description('Private Link Service name')
 param plsName string = 'pls-dev-eus-01'
 
+resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
+  name: vnetName
+}
 
-resource pls 'Microsoft.Network/privateLinkServices@2023-05-01' = {
+resource plsSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
+  name: '${vnet.name}/pls-subnet'
+
+  properties: {
+    addressPrefix: '10.0.2.0/24'
+    privateLinkServiceNetworkPolicies: 'Disabled'
+  }
+}
+
+resource privateLinkService 'Microsoft.Network/privateLinkServices@2023-05-01' = {
   name: plsName
   location: location
 
   properties: {
-
-    // Connect PLS to existing Internal Load Balancer frontend
     loadBalancerFrontendIpConfigurations: [
       {
         id: ilbFrontendId
       }
     ]
 
-    // Private IP configuration for Private Link Service
     ipConfigurations: [
       {
         name: 'pls-ipconfig'
-
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           privateIPAddressVersion: 'IPv4'
 
           subnet: {
-            id: plsSubnetId
+            id: plsSubnet.id
           }
         }
       }
@@ -49,8 +59,10 @@ resource pls 'Microsoft.Network/privateLinkServices@2023-05-01' = {
       subscriptions: []
     }
   }
+
+  dependsOn: [
+    plsSubnet
+  ]
 }
 
-
-output privateLinkServiceId string = pls.id
-output privateLinkServiceName string = pls.name
+output privateLinkServiceId string = privateLinkService.id
