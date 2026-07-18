@@ -1,0 +1,4 @@
+az deployment group create \
+  --resource-group rg-p2s-lab \
+  --template-file vms.bicep \
+  --parameters backendPoolId=<ID>
