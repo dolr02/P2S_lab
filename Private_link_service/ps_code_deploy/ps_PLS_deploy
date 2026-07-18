@@ -1,5 +1,6 @@
 az deployment group create `
   --resource-group rg-p2s-lab `
   --template-file Private_link.bicep `
-  --parameters ilbFrontendId="/subscriptions/a48d08c6-0e09-428b-a68f-ae160e9abf86/resourceGroups/rg-p2s-lab/providers/Microsoft.Network/loadBalancers/ilb-dev/frontendIPConfigurations/ilb-fe" `
-               plsSubnetId="/subscriptions/a48d08c6-0e09-428b-a68f-ae160e9abf86/resourceGroups/rg-p2s-lab/providers/Microsoft.Network/virtualNetworks/vnet-dev-eus-01/subnets/pls-subnet"
+  --parameters `
+  ilbFrontendId="/subscriptions/a48d08c6-0e09-428b-a68f-ae160e9abf86/resourceGroups/rg-p2s-lab/providers/Microsoft.Network/loadBalancers/ilb-dev/frontendIPConfigurations/ilb-fe" `
+  plsSubnetId="/subscriptions/a48d08c6-0e09-428b-a68f-ae160e9abf86/resourceGroups/rg-p2s-lab/providers/Microsoft.Network/virtualNetworks/vnet-dev-eus-01/subnets/pls-subnet"
