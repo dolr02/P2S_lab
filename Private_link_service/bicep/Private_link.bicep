@@ -5,9 +5,6 @@ param location string = resourceGroup().location
 @description('Resource ID of existing ILB frontend')
 param ilbFrontendId string
 
-@description('Resource ID of existing ILB backend pool')
-param ilbBackendPoolId string
-
 // EXISTUJÍCÍ SUBNET (kde bude PLS)
 @description('Resource ID of subnet for Private Link Service')
 param plsSubnetId string
@@ -25,11 +22,8 @@ resource pls 'Microsoft.Network/privateLinkServices@2023-05-01' = {
         id: ilbFrontendId
       }
     ]
-    loadBalancerBackendAddressPools: [
-      {
-        id: ilbBackendPoolId
-      }
-    ]
+    // backend pool is not a supported property for this API version; backend association
+    // is achieved via the IP configuration and the load balancer frontend
     ipConfigurations: [
       {
         name: 'pls-ipconfig'
