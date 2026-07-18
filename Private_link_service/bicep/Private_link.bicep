@@ -21,11 +21,6 @@ resource pls 'Microsoft.Network/privateLinkServices@2023-05-01' = {
         id: ilbFrontendId
       }
     ]
-    loadBalancerBackendAddressPools: [
-      {
-        id: ilbBackendPoolId
-      }
-    ]
     ipConfigurations: [
       {
         name: 'pls-ipconfig'
