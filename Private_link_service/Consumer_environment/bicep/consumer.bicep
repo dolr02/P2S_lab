@@ -1,77 +1,119 @@
 targetScope = 'resourceGroup'
 
-var location = 'eastus'
+param location string = resourceGroup().location
 
-var vnetName = 'vnet-consumer-eus-01'
-var vmName = 'vm-consumer-eus-01'
+param vnetName string = 'vnet-consumer-eus-01'
 
-var adminUsername = 'azureuser'
-var adminPassword = 'AzureLab123456789!'
+param vmName string = 'vm-consumer-eus-01'
+
+param adminUsername string = 'azureuser'
 
 
 resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
+
   name: 'nsg-consumer-vm'
+
   location: location
 
+
   properties: {
+
     securityRules: [
+
       {
         name: 'AllowSSH'
+
         properties: {
+
           priority: 100
+
           direction: 'Inbound'
+
           access: 'Allow'
+
           protocol: 'Tcp'
+
           sourcePortRange: '*'
+
           destinationPortRange: '22'
+
           sourceAddressPrefix: '*'
+
           destinationAddressPrefix: '*'
+
         }
+
       }
+
     ]
+
   }
+
 }
 
 
+
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
+
   name: vnetName
+
   location: location
 
+
   properties: {
+
     addressSpace: {
+
       addressPrefixes: [
-        '10.20.0.0/16'
+
+        '10.10.0.0/16'
+
       ]
+
     }
+
 
     subnets: [
 
       {
-        name: 'snet-consumer-vm'
+
+        name: 'consumer-subnet'
 
         properties: {
-          addressPrefix: '10.20.1.0/24'
+
+          addressPrefix: '10.10.1.0/24'
+
 
           networkSecurityGroup: {
+
             id: nsg.id
+
           }
+
         }
+
       }
 
 
       {
-        name: 'snet-private-endpoint'
+
+        name: 'pe-subnet'
 
         properties: {
 
-          addressPrefix: '10.20.2.0/24'
+          addressPrefix: '10.10.2.0/24'
+
 
           privateEndpointNetworkPolicies: 'Disabled'
+
         }
+
       }
 
     ]
+
   }
+
 }
 
 
@@ -88,18 +130,21 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
     ipConfigurations: [
 
       {
+
         name: 'ipconfig1'
+
 
         properties: {
 
           privateIPAllocationMethod: 'Dynamic'
+
 
           subnet: {
 
             id: resourceId(
               'Microsoft.Network/virtualNetworks/subnets',
               vnetName,
-              'snet-consumer-vm'
+              'consumer-subnet'
             )
 
           }
@@ -116,8 +161,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
 
 
 
-
-resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
+resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
 
   name: vmName
 
@@ -129,7 +173,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
 
     hardwareProfile: {
 
-      vmSize: 'Standard_B2s'
+      vmSize: 'Standard_B1s'
 
     }
 
@@ -140,10 +184,9 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
 
       adminUsername: adminUsername
 
-      adminPassword: adminPassword
+      adminPassword: 'AzureLab123456789!'
 
     }
-
 
 
     storageProfile: {
@@ -170,8 +213,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
     }
 
 
-
-
     networkProfile: {
 
       networkInterfaces: [
@@ -186,20 +227,17 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
 
     }
 
-
   }
 
 }
 
 
 
+output vmPrivateIP string = nic.properties.ipConfigurations[0].properties.privateIPAddress
 
-output consumerVnetName string = vnet.name
 
-output consumerVmName string = vm.name
-
-output privateEndpointSubnetId string = resourceId(
+output peSubnetId string = resourceId(
   'Microsoft.Network/virtualNetworks/subnets',
   vnetName,
-  'snet-private-endpoint'
+  'pe-subnet'
 )
