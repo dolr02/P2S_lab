@@ -113,7 +113,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
       adminPassword: 'AzureLab123456789!'
     }
 
-
     storageProfile: {
 
       imageReference: {
@@ -128,7 +127,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
       }
     }
 
-
     networkProfile: {
       networkInterfaces: [
         {
@@ -141,6 +139,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
 
 
 output vmPrivateIP string = nic.properties.ipConfigurations[0].properties.privateIPAddress
+
 
 output peSubnetId string = resourceId(
   'Microsoft.Network/virtualNetworks/subnets',
