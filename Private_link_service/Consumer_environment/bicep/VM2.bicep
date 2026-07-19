@@ -1,13 +1,19 @@
 param location string = resourceGroup().location
 
+param adminUsername string = 'azureuser'
+
+@secure()
+param adminPassword string
+
+
+resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
+  name: 'vnet-consumer'
+}
+
 
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing = {
+  parent: vnet
   name: 'snet-vm'
-
-  parent: resourceId(
-    'Microsoft.Network/virtualNetworks',
-    'vnet-consumer'
-  )
 }
 
 
@@ -43,6 +49,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
   location: location
 
   properties: {
+
     networkSecurityGroup: {
       id: nsg.id
     }
@@ -52,11 +59,13 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
         name: 'ipconfig1'
 
         properties: {
+
           privateIPAllocationMethod: 'Dynamic'
 
           subnet: {
             id: subnet.id
           }
+
         }
       }
     ]
@@ -74,28 +83,45 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
       vmSize: 'Standard_B1s'
     }
 
+
     osProfile: {
+
       computerName: 'consumer01'
-      adminUsername: 'azureuser'
-      adminPassword: 'Azure123456789!'
+
+      adminUsername: adminUsername
+
+      adminPassword: adminPassword
+
     }
+
 
     storageProfile: {
+
       imageReference: {
+
         publisher: 'Canonical'
+
         offer: '0001-com-ubuntu-server-jammy'
+
         sku: '22_04-lts'
+
         version: 'latest'
+
       }
+
     }
 
+
     networkProfile: {
+
       networkInterfaces: [
         {
           id: nic.id
         }
       ]
+
     }
+
   }
 }
 
