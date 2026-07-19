@@ -1,19 +1,9 @@
 targetScope = 'resourceGroup'
 
 param location string = resourceGroup().location
-
-// FULL resource ID PLS z provider RG
 param plsId string
-
-// VNET name v consumer RG
 param vnetName string = 'vnet-consumer'
 
-// PE subnet name
-param peSubnetName string = 'pe-subnet'
-
-// ----------------------
-// PRIVATE ENDPOINT
-// ----------------------
 resource pe 'Microsoft.Network/privateEndpoints@2023-05-01' = {
   name: 'consumer-pe'
   location: location
@@ -22,7 +12,7 @@ resource pe 'Microsoft.Network/privateEndpoints@2023-05-01' = {
       id: resourceId(
         'Microsoft.Network/virtualNetworks/subnets',
         vnetName,
-        peSubnetName
+        'pe-subnet'
       )
     }
     privateLinkServiceConnections: [
