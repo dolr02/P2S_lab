@@ -7,7 +7,6 @@ param adminUsername string = 'azureuser'
 @secure()
 param adminPassword string
 
-// NSG
 resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
   name: '${vmName}-nsg'
   location: location
@@ -30,7 +29,6 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
   }
 }
 
-// VNET + SUBNET
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
   name: '${vmName}-vnet'
   location: location
@@ -54,7 +52,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
   }
 }
 
-// PUBLIC IP — MUST BE STANDARD SKU
 resource pip 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
   name: '${vmName}-pip'
   location: location
@@ -67,11 +64,9 @@ resource pip 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
   }
 }
 
-// NIC — FIXED
 resource nic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
   name: '${vmName}-nic'
   location: location
-
   properties: {
     ipConfigurations: [
       {
@@ -90,11 +85,9 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
   }
 }
 
-// VM
 resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
   name: vmName
   location: location
-
   properties: {
     hardwareProfile: {
       vmSize: 'Standard_B1s'
