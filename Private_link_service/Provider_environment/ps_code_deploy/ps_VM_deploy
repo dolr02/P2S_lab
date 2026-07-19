@@ -1,0 +1,5 @@
+az deployment group create `
+-g rg-p2s-lab `
+-n provider-vms `
+-f vms.bicep `
+--parameters backendPoolId="$backendPoolId"

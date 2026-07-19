@@ -1,3 +1,0 @@
-az deployment group create `
-  -g rg-p2s-lab `
-  --template-file PE_PLS.bicep
