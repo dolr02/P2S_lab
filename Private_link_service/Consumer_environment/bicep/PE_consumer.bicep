@@ -20,12 +20,7 @@ resource pe 'Microsoft.Network/privateEndpoints@2023-05-01' = {
         name: 'pls-connection'
         properties: {
           privateLinkServiceId: plsId
-
-          // DŮLEŽITÉ: správný groupId pro PLS
-          groupIds: [
-            'loadBalancerFrontend'
-          ]
-
+          // DŮLEŽITÉ: žádné groupIds
           requestMessage: 'Requesting access from consumer environment'
         }
       }
