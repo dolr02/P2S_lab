@@ -1,11 +1,10 @@
 targetScope = 'resourceGroup'
 
 param location string = resourceGroup().location
-param adminUsername string = 'azureuser'
 
-@secure()
-param adminPassword string
-
+//
+// CONSUMER VNET
+//
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
   name: 'vnet-consumer'
   location: location
@@ -26,46 +25,42 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
         name: 'pe-subnet'
         properties: {
           addressPrefix: '10.10.2.0/24'
+          privateEndpointNetworkPolicies: 'Disabled'
         }
       }
     ]
   }
 }
 
-resource pip 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
-  name: 'vm-pip'
-  location: location
-  sku: {
-    name: 'Standard'
-  }
-  properties: {
-    publicIPAllocationMethod: 'Static'
-    publicIPAddressVersion: 'IPv4'
-  }
-}
-
-resource nic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
-  name: 'vm-nic'
+//
+// NIC
+//
+resource nic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
+  name: 'nic-consumer-vm'
   location: location
   properties: {
     ipConfigurations: [
       {
         name: 'ipconfig1'
         properties: {
-          privateIPAllocationMethod: 'Dynamic'
-          publicIPAddress: {
-            id: pip.id
-          }
           subnet: {
-            id: vnet.properties.subnets[0].id
+            id: resourceId(
+              'Microsoft.Network/virtualNetworks/subnets',
+              'vnet-consumer',
+              'vm-subnet'
+            )
           }
+          privateIPAllocationMethod: 'Dynamic'
         }
       }
     ]
   }
 }
 
-resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
+//
+// VM
+//
+resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
   name: 'vm-consumer'
   location: location
   properties: {
@@ -74,8 +69,8 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
     }
     osProfile: {
       computerName: 'vm-consumer'
-      adminUsername: adminUsername
-      adminPassword: adminPassword
+      adminUsername: 'azureuser'
+      adminPassword: 'Password123!'
     }
     storageProfile: {
       imageReference: {
@@ -83,9 +78,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
         offer: '0001-com-ubuntu-server-jammy'
         sku: '22_04-lts'
         version: 'latest'
-      }
-      osDisk: {
-        createOption: 'FromImage'
       }
     }
     networkProfile: {
@@ -98,4 +90,5 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
   }
 }
 
-output peSubnetId string = vnet.properties.subnets[1].id
+output vnetId string = vnet.id
+output peSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet-consumer', 'pe-subnet')
