@@ -45,65 +45,92 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
     }
 
     subnets: [
+
       {
         name: 'snet-consumer-vm'
+
         properties: {
           addressPrefix: '10.20.1.0/24'
+
           networkSecurityGroup: {
             id: nsg.id
           }
         }
       }
 
+
       {
         name: 'snet-private-endpoint'
+
         properties: {
+
           addressPrefix: '10.20.2.0/24'
 
           privateEndpointNetworkPolicies: 'Disabled'
         }
       }
+
     ]
   }
 }
 
 
+
 resource nic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
+
   name: '${vmName}-nic'
+
   location: location
+
 
   properties: {
 
     ipConfigurations: [
+
       {
         name: 'ipconfig1'
 
         properties: {
+
           privateIPAllocationMethod: 'Dynamic'
 
           subnet: {
+
             id: resourceId(
               'Microsoft.Network/virtualNetworks/subnets',
               vnetName,
               'snet-consumer-vm'
             )
+
           }
+
         }
+
       }
+
     ]
+
   }
+
 }
+
+
 
 
 resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
 
   name: vmName
+
   location: location
+
 
   properties: {
 
+
     hardwareProfile: {
+
       vmSize: 'Standard_B2s'
+
     }
 
 
@@ -116,6 +143,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
       adminPassword: adminPassword
 
     }
+
 
 
     storageProfile: {
@@ -132,6 +160,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
 
       }
 
+
       osDisk: {
 
         createOption: 'FromImage'
@@ -141,24 +170,36 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
     }
 
 
+
+
     networkProfile: {
 
       networkInterfaces: [
 
         {
+
           id: nic.id
+
         }
 
       ]
 
     }
 
+
   }
+
 }
 
 
-output consumerVnet string = vnet.name
 
-output consumerVM string = vm.name
 
-output privateEndpointSubnet string = 'snet-private-endpoint'
+output consumerVnetName string = vnet.name
+
+output consumerVmName string = vm.name
+
+output privateEndpointSubnetId string = resourceId(
+  'Microsoft.Network/virtualNetworks/subnets',
+  vnetName,
+  'snet-private-endpoint'
+)
