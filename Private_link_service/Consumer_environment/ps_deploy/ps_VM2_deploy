@@ -1,0 +1,4 @@
+az deployment group create `
+  -g rg-consumer-dev-eus `
+  -n consumer-vm `
+  -f consumer-VM2.bicep
