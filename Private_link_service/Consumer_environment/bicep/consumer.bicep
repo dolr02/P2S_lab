@@ -17,9 +17,15 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
     }
     subnets: [
       {
-        name: 'subnet'
+        name: 'vm-subnet'
         properties: {
           addressPrefix: '10.10.1.0/24'
+        }
+      }
+      {
+        name: 'pe-subnet'
+        properties: {
+          addressPrefix: '10.10.2.0/24'
         }
       }
     ]
@@ -91,3 +97,5 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
     }
   }
 }
+
+output peSubnetId string = vnet.properties.subnets[1].id
