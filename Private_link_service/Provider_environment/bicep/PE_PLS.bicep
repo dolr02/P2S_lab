@@ -1,35 +1,36 @@
 targetScope = 'resourceGroup'
 
 param location string = resourceGroup().location
-param vnetName string = 'vnet-dev-eus-01'
-param subnetName string = 'snet-dev-eus-01'
-param plsName string = 'pls-dev-eus-01'
 
-resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
-  name: vnetName
-}
-
-resource appSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing = {
-  name: subnetName
-  parent: vnet
-}
-
-//
-// PLS SUBNET
-//
-resource plsSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' = {
-  name: '${vnetName}/pls-subnet'
+resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
+  name: 'vnet-provider'
+  location: location
   properties: {
-    addressPrefix: '10.0.2.0/24'
-    privateLinkServiceNetworkPolicies: 'Disabled'
+    addressSpace: {
+      addressPrefixes: [
+        '10.0.0.0/16'
+      ]
+    }
+    subnets: [
+      {
+        name: 'app-subnet'
+        properties: {
+          addressPrefix: '10.0.1.0/24'
+        }
+      }
+      {
+        name: 'pls-subnet'
+        properties: {
+          addressPrefix: '10.0.2.0/24'
+          privateLinkServiceNetworkPolicies: 'Disabled'
+        }
+      }
+    ]
   }
 }
 
-//
-// INTERNAL LOAD BALANCER
-//
 resource ilb 'Microsoft.Network/loadBalancers@2023-09-01' = {
-  name: 'ilb-dev'
+  name: 'ilb-provider'
   location: location
   sku: {
     name: 'Standard'
@@ -40,7 +41,7 @@ resource ilb 'Microsoft.Network/loadBalancers@2023-09-01' = {
         name: 'ilb-fe'
         properties: {
           subnet: {
-            id: appSubnet.id
+            id: vnet.properties.subnets[0].id
           }
           privateIPAddress: '10.0.1.100'
           privateIPAllocationMethod: 'Static'
@@ -66,13 +67,13 @@ resource ilb 'Microsoft.Network/loadBalancers@2023-09-01' = {
         name: 'http-rule'
         properties: {
           frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', 'ilb-dev', 'ilb-fe')
+            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', 'ilb-provider', 'ilb-fe')
           }
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', 'ilb-dev', 'ilb-be')
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', 'ilb-provider', 'ilb-be')
           }
           probe: {
-            id: resourceId('Microsoft.Network/loadBalancers/probes', 'ilb-dev', 'tcp-80')
+            id: resourceId('Microsoft.Network/loadBalancers/probes', 'ilb-provider', 'tcp-80')
           }
           protocol: 'Tcp'
           frontendPort: 80
@@ -83,16 +84,13 @@ resource ilb 'Microsoft.Network/loadBalancers@2023-09-01' = {
   }
 }
 
-//
-// PLS
-//
-resource privateLinkService 'Microsoft.Network/privateLinkServices@2023-05-01' = {
-  name: plsName
+resource pls 'Microsoft.Network/privateLinkServices@2023-05-01' = {
+  name: 'pls-provider'
   location: location
   properties: {
     loadBalancerFrontendIpConfigurations: [
       {
-        id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', 'ilb-dev', 'ilb-fe')
+        id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', 'ilb-provider', 'ilb-fe')
       }
     ]
     ipConfigurations: [
@@ -100,9 +98,8 @@ resource privateLinkService 'Microsoft.Network/privateLinkServices@2023-05-01' =
         name: 'pls-ipconfig'
         properties: {
           privateIPAllocationMethod: 'Dynamic'
-          privateIPAddressVersion: 'IPv4'
           subnet: {
-            id: plsSubnet.id
+            id: vnet.properties.subnets[1].id
           }
         }
       }
@@ -110,6 +107,5 @@ resource privateLinkService 'Microsoft.Network/privateLinkServices@2023-05-01' =
   }
 }
 
-output privateLinkServiceId string = privateLinkService.id
-output ilbBackendPoolId string = ilb.properties.backendAddressPools[0].id
-
+output plsId string = pls.id
+output backendPoolId string = ilb.properties.backendAddressPools[0].id

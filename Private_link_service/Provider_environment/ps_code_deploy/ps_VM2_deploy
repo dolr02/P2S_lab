@@ -1,4 +1,5 @@
 az deployment group create `
   -g rg-p2s-lab `
   --template-file VMs2.bicep `
-  --parameters backendPoolId="<ilbBackendPoolId>"
+  --parameters backendPoolId="/subscriptions/a48d08c6-0e09-428b-a68f-ae160e9abf86/resourceGroups/rg-p2s-lab/providers/Microsoft.Network/loadBalancers/ilb-dev/backendAddressPools/ilb-be"
+
