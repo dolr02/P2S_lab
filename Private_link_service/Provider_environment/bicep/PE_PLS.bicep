@@ -1,19 +1,10 @@
 targetScope = 'resourceGroup'
 
 param location string = resourceGroup().location
-
-@description('Existing VNet name')
 param vnetName string = 'vnet-dev-eus-01'
-
-@description('Existing subnet name for ILB + VMs')
 param subnetName string = 'snet-dev-eus-01'
-
-@description('Private Link Service name')
 param plsName string = 'pls-dev-eus-01'
 
-//
-// EXISTING VNET + SUBNET PRO ILB/VM
-//
 resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
   name: vnetName
 }
@@ -24,7 +15,7 @@ resource appSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existi
 }
 
 //
-// PLS SUBNET (NOVÝ, DŮLEŽITÝ)
+// PLS SUBNET
 //
 resource plsSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' = {
   name: '${vnetName}/pls-subnet'
@@ -93,7 +84,7 @@ resource ilb 'Microsoft.Network/loadBalancers@2023-09-01' = {
 }
 
 //
-// PLS NAVÁZANÝ NA ILB + PLS SUBNET
+// PLS
 //
 resource privateLinkService 'Microsoft.Network/privateLinkServices@2023-05-01' = {
   name: plsName
@@ -116,19 +107,9 @@ resource privateLinkService 'Microsoft.Network/privateLinkServices@2023-05-01' =
         }
       }
     ]
-    enableProxyProtocol: false
-    autoApproval: {
-      subscriptions: []
-    }
-    visibility: {
-      subscriptions: []
-    }
   }
-  dependsOn: [
-    plsSubnet
-    ilb
-  ]
 }
 
 output privateLinkServiceId string = privateLinkService.id
 output ilbBackendPoolId string = ilb.properties.backendAddressPools[0].id
+
