@@ -1,4 +1,4 @@
 az deployment group create `
   -g rg-consumer-dev-eus `
-  --template-file consumer-full.bicep `
+  --template-file PE_consumer.bicep `
   --parameters adminPassword="AzureLab123456789!" plsId="<PLS-ID>"
