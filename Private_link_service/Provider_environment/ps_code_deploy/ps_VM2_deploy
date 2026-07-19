@@ -1,4 +1,4 @@
 az deployment group create `
   -g rg-p2s-lab `
-  --template-file provider-vm-web.bicep `
+  --template-file VMs2.bicep `
   --parameters backendPoolId="<ilbBackendPoolId>"
