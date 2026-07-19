@@ -1,36 +1,24 @@
 targetScope = 'resourceGroup'
 
+@description('Azure region')
 param location string = resourceGroup().location
-param vmName string = 'vm-consumer-eus-01'
-param adminUsername string = 'azureuser'
+
+@description('Admin username for VM')
+param adminUsername string
 
 @secure()
+@description('Admin password for VM')
 param adminPassword string
 
-resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
-  name: '${vmName}-nsg'
-  location: location
-  properties: {
-    securityRules: [
-      {
-        name: 'AllowSSH'
-        properties: {
-          priority: 100
-          direction: 'Inbound'
-          access: 'Allow'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          destinationPortRange: '22'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: '*'
-        }
-      }
-    ]
-  }
-}
+@description('Consumer VM name')
+param vmName string = 'vm-consumer-dev'
 
-resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
-  name: '${vmName}-vnet'
+@description('Consumer VNet name')
+param vnetName string = 'vnet-consumer-dev'
+
+
+resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
+  name: vnetName
   location: location
   properties: {
     addressSpace: {
@@ -40,31 +28,17 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
     }
     subnets: [
       {
-        name: 'vm-subnet'
+        name: 'snet-consumer'
         properties: {
           addressPrefix: '10.20.1.0/24'
-          networkSecurityGroup: {
-            id: nsg.id
-          }
         }
       }
     ]
   }
 }
 
-resource pip 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
-  name: '${vmName}-pip'
-  location: location
-  sku: {
-    name: 'Standard'
-  }
-  properties: {
-    publicIPAllocationMethod: 'Static'
-    publicIPAddressVersion: 'IPv4'
-  }
-}
 
-resource nic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
+resource nic 'Microsoft.Network/networkInterfaces@2023-11-01' = {
   name: '${vmName}-nic'
   location: location
   properties: {
@@ -72,31 +46,35 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
       {
         name: 'ipconfig1'
         properties: {
-          privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: resourceId('Microsoft.Network/virtualNetworks/subnets', '${vmName}-vnet', 'vm-subnet')
+            id: resourceId(
+              'Microsoft.Network/virtualNetworks/subnets',
+              vnet.name,
+              'snet-consumer'
+            )
           }
-          publicIPAddress: {
-            id: pip.id
-          }
+          privateIPAllocationMethod: 'Dynamic'
         }
       }
     ]
   }
 }
 
-resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
+
+resource vm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
   name: vmName
   location: location
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_B1s'
+      vmSize: 'Standard_B2s'
     }
+
     osProfile: {
       computerName: vmName
       adminUsername: adminUsername
       adminPassword: adminPassword
     }
+
     storageProfile: {
       imageReference: {
         publisher: 'Canonical'
@@ -108,6 +86,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
         createOption: 'FromImage'
       }
     }
+
     networkProfile: {
       networkInterfaces: [
         {
@@ -118,4 +97,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
   }
 }
 
+
 output vmPrivateIP string = nic.properties.ipConfigurations[0].properties.privateIPAddress
+output vmName string = vm.name
