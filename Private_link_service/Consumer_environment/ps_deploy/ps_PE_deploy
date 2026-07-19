@@ -1,0 +1,4 @@
+az deployment group create \
+  --resource-group rg-consumer-dev-eus \
+  --template-file consumer-pe.bicep \
+  --parameters plsId="/subscriptions/<SUB>/resourceGroups/rg-provider-dev-eus/providers/Microsoft.Network/privateLinkServices/pls-provider"
