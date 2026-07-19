@@ -1,3 +1,0 @@
-az deployment group create `
-  -g rg-consumer-dev-eus `
-  --template-file consumer.bicep

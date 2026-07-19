@@ -1,4 +1,5 @@
 az deployment group create `
   -g rg-consumer-dev-eus `
-  --template-file PE_consumer.bicep `
-  --parameters plsId="/subscriptions/.../resourceGroups/rg-p2s-lab/providers/Microsoft.Network/privateLinkServices/pls-dev-eus-01"
+  -n consumer `
+  -f consumer.bicep `
+  --parameters plsId="$plsId"
