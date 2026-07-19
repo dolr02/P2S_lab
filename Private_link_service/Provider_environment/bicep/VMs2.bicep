@@ -1,3 +1,5 @@
+targetScope = 'resourceGroup'
+
 param vnetName string = 'vnet-dev-eus-01'
 param subnetName string = 'snet-dev-eus-01'
 param backendPoolId string
