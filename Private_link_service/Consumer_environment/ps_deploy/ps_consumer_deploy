@@ -1,4 +1,1 @@
-az deployment group create `
-  --resource-group rg-consumer-dev-eus `
-  --template-file consumer.bicep `
-  --parameters adminPassword="AzureLab123456789!"
+az deployment group create --resource-group rg-consumer-dev-eus --template-file consumer.bicep --parameters adminPassword="AzureLab123456789!"
