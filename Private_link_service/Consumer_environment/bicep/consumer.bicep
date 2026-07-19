@@ -2,31 +2,66 @@ targetScope = 'resourceGroup'
 
 param location string = resourceGroup().location
 
-
 param vnetName string = 'vnet-consumer-eus-01'
 
 param vmName string = 'vm-consumer-eus-01'
 
+param adminUsername string = 'azureuser'
+
+
+resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
+  name: 'nsg-consumer-vm'
+  location: location
+
+  properties: {
+
+    securityRules: [
+      {
+        name: 'AllowSSH'
+        properties: {
+          priority: 100
+          direction: 'Inbound'
+          access: 'Allow'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '22'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+    ]
+  }
+}
+
 
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
+
   name: vnetName
   location: location
 
   properties: {
+
     addressSpace: {
       addressPrefixes: [
         '10.10.0.0/16'
       ]
     }
 
+
     subnets: [
+
       {
         name: 'consumer-subnet'
 
         properties: {
           addressPrefix: '10.10.1.0/24'
+
+          networkSecurityGroup: {
+            id: nsg.id
+          }
         }
       }
+
 
       {
         name: 'pe-subnet'
@@ -37,7 +72,22 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
           privateEndpointNetworkPolicies: 'Disabled'
         }
       }
+
     ]
+  }
+}
+
+
+resource publicIP 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
+
+  name: '${vmName}-pip'
+
+  location: location
+
+  properties: {
+
+    publicIPAllocationMethod: 'Static'
+
   }
 }
 
@@ -48,23 +98,32 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
 
   location: location
 
+
   properties: {
 
     ipConfigurations: [
+
       {
         name: 'ipconfig1'
 
         properties: {
 
+          privateIPAllocationMethod: 'Dynamic'
+
+
+          publicIPAddress: {
+            id: publicIP.id
+          }
+
+
           subnet: {
+
             id: resourceId(
               'Microsoft.Network/virtualNetworks/subnets',
               vnetName,
               'consumer-subnet'
             )
           }
-
-          privateIPAllocationMethod: 'Dynamic'
         }
       }
     ]
@@ -90,9 +149,9 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
 
       computerName: vmName
 
-      adminUsername: 'azureuser'
+      adminUsername: adminUsername
 
-      adminPassword: 'Azure12345678!Strong'
+      adminPassword: 'AzureLab123456789!'
     }
 
 
@@ -108,6 +167,14 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
 
         version: 'latest'
       }
+
+
+      osDisk: {
+
+        createOption: 'FromImage'
+
+      }
+
     }
 
 
@@ -123,7 +190,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
 }
 
 
-output consumerVnetId string = vnet.id
+output vmPrivateIP string = nic.properties.ipConfigurations[0].properties.privateIPAddress
 
 output peSubnetId string = resourceId(
   'Microsoft.Network/virtualNetworks/subnets',
