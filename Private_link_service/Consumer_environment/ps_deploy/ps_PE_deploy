@@ -1,4 +1,4 @@
 az deployment group create `
   -g rg-consumer-dev-eus `
-  --template-file PE_consumer.bicep `
-  --parameters plsId="/subscriptions/a48d08c6-0e09-428b-a68f-ae160e9abf86/resourceGroups/rg-p2s-lab/providers/Microsoft.Network/privateLinkServices/pls-dev-eus-01" vnetName="vnet-consumer"
+  --template-file consumer-full.bicep `
+  --parameters plsId="/subscriptions/a48d08c6-0e09-428b-a68f-ae160e9abf86/resourceGroups/rg-p2s-lab/providers/Microsoft.Network/privateLinkServices/pls-dev-eus-01"
