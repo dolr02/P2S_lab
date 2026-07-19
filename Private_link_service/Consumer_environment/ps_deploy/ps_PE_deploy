@@ -1,4 +1,4 @@
-az deployment group create \
-  --resource-group rg-consumer-dev-eus \
-  --template-file consumer-pe.bicep \
-  --parameters plsId="/subscriptions/<SUB>/resourceGroups/rg-provider-dev-eus/providers/Microsoft.Network/privateLinkServices/pls-provider"
+az deployment group create `
+  -g rg-consumer-dev-eus `
+  --template-file consumer-full.bicep `
+  --parameters adminPassword="AzureLab123456789!" plsId="<PLS-ID>"
