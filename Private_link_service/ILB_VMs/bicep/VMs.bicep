@@ -1,78 +1,48 @@
-var location = 'eastus'
+param location string = resourceGroup().location
 
-var subnetId = '/subscriptions/a48d08c6-0e09-428b-a68f-ae160e9abf86/resourceGroups/rg-consumer-dev-eus/providers/Microsoft.Network/virtualNetworks/vnet-consumer/subnets/snet-vm'
+param vmSize string = 'Standard_B2s'
 
+param adminUsername string = 'azureuser'
 
-resource nic01 'Microsoft.Network/networkInterfaces@2023-09-01' = {
-  name: 'nic-consumer-01'
+@secure()
+param adminPassword string
+
+param vnetName string
+param subnetName string
+
+var vmCount = 4
+var vmPrefix = 'vm-provider-'
+
+resource nsg 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
+  name: 'nsg-provider-vm'
   location: location
+
   properties: {
-    ipConfigurations: [
+    securityRules: [
       {
-        name: 'ipconfig1'
+        name: 'Allow-HTTP'
         properties: {
-          privateIPAllocationMethod: 'Static'
-          privateIPAddress: '10.1.2.4'
-          subnet: {
-            id: subnetId
-          }
+          priority: 100
+          access: 'Allow'
+          direction: 'Inbound'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '80'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
         }
       }
-    ]
-  }
-}
-
-resource nic02 'Microsoft.Network/networkInterfaces@2023-09-01' = {
-  name: 'nic-consumer-02'
-  location: location
-  properties: {
-    ipConfigurations: [
       {
-        name: 'ipconfig1'
+        name: 'Allow-SSH'
         properties: {
-          privateIPAllocationMethod: 'Static'
-          privateIPAddress: '10.1.2.5'
-          subnet: {
-            id: subnetId
-          }
-        }
-      }
-    ]
-  }
-}
-
-resource nic03 'Microsoft.Network/networkInterfaces@2023-09-01' = {
-  name: 'nic-consumer-03'
-  location: location
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          privateIPAllocationMethod: 'Static'
-          privateIPAddress: '10.1.2.6'
-          subnet: {
-            id: subnetId
-          }
-        }
-      }
-    ]
-  }
-}
-
-resource nic04 'Microsoft.Network/networkInterfaces@2023-09-01' = {
-  name: 'nic-consumer-04'
-  location: location
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          privateIPAllocationMethod: 'Static'
-          privateIPAddress: '10.1.2.7'
-          subnet: {
-            id: subnetId
-          }
+          priority: 110
+          access: 'Allow'
+          direction: 'Inbound'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '22'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
         }
       }
     ]
@@ -80,137 +50,87 @@ resource nic04 'Microsoft.Network/networkInterfaces@2023-09-01' = {
 }
 
 
-resource vm01 'Microsoft.Compute/virtualMachines@2024-03-01' = {
-  name: 'vm-consumer-01'
-  location: location
-  properties: {
-    hardwareProfile: {
-      vmSize: 'Standard_B1s'
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'Canonical'
-        offer: '0001-com-ubuntu-server-jammy'
-        sku: '22_04-lts-gen2'
-        version: 'latest'
+resource nic 'Microsoft.Network/networkInterfaces@2023-09-01' = [
+  for i in range(1, vmCount + 1): {
+
+    name: 'nic-provider-0${i}'
+    location: location
+
+    properties: {
+
+      networkSecurityGroup: {
+        id: nsg.id
       }
-      osDisk: {
-        createOption: 'FromImage'
-      }
-    }
-    osProfile: {
-      computerName: 'vm-consumer-01'
-      adminUsername: 'azureuser'
-      adminPassword: 'Azure12345!Password'
-    }
-    networkProfile: {
-      networkInterfaces: [
+
+      ipConfigurations: [
         {
-          id: nic01.id
+          name: 'ipconfig1'
+
+          properties: {
+            privateIPAllocationMethod: 'Dynamic'
+
+            subnet: {
+              id: resourceId(
+                'Microsoft.Network/virtualNetworks/subnets',
+                vnetName,
+                subnetName
+              )
+            }
+          }
         }
       ]
     }
   }
-}
+]
 
 
-resource vm02 'Microsoft.Compute/virtualMachines@2024-03-01' = {
-  name: 'vm-consumer-02'
-  location: location
-  properties: {
-    hardwareProfile: {
-      vmSize: 'Standard_B1s'
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'Canonical'
-        offer: '0001-com-ubuntu-server-jammy'
-        sku: '22_04-lts-gen2'
-        version: 'latest'
+resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = [
+  for i in range(1, vmCount + 1): {
+
+    name: '${vmPrefix}0${i}'
+    location: location
+
+    properties: {
+
+      hardwareProfile: {
+        vmSize: vmSize
       }
-      osDisk: {
-        createOption: 'FromImage'
-      }
-    }
-    osProfile: {
-      computerName: 'vm-consumer-02'
-      adminUsername: 'azureuser'
-      adminPassword: 'Azure12345!Password'
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: nic02.id
+
+      osProfile: {
+        computerName: '${vmPrefix}0${i}'
+        adminUsername: adminUsername
+
+        linuxConfiguration: {
+          disablePasswordAuthentication: false
         }
-      ]
+
+        adminPassword: adminPassword
+      }
+
+
+      storageProfile: {
+
+        imageReference: {
+          publisher: 'Canonical'
+          offer: '0001-com-ubuntu-server-jammy'
+          sku: '22_04-lts'
+          version: 'latest'
+        }
+
+        osDisk: {
+          createOption: 'FromImage'
+        }
+      }
+
+
+      networkProfile: {
+        networkInterfaces: [
+          {
+            id: nic[i-1].id
+          }
+        ]
+      }
+
     }
   }
-}
-
-
-resource vm03 'Microsoft.Compute/virtualMachines@2024-03-01' = {
-  name: 'vm-consumer-03'
-  location: location
-  properties: {
-    hardwareProfile: {
-      vmSize: 'Standard_B1s'
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'Canonical'
-        offer: '0001-com-ubuntu-server-jammy'
-        sku: '22_04-lts-gen2'
-        version: 'latest'
-      }
-      osDisk: {
-        createOption: 'FromImage'
-      }
-    }
-    osProfile: {
-      computerName: 'vm-consumer-03'
-      adminUsername: 'azureuser'
-      adminPassword: 'Azure12345!Password'
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: nic03.id
-        }
-      ]
-    }
-  }
-}
-
-
-resource vm04 'Microsoft.Compute/virtualMachines@2024-03-01' = {
-  name: 'vm-consumer-04'
-  location: location
-  properties: {
-    hardwareProfile: {
-      vmSize: 'Standard_B1s'
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'Canonical'
-        offer: '0001-com-ubuntu-server-jammy'
-        sku: '22_04-lts-gen2'
-        version: 'latest'
-      }
-      osDisk: {
-        createOption: 'FromImage'
-      }
-    }
-    osProfile: {
-      computerName: 'vm-consumer-04'
-      adminUsername: 'azureuser'
-      adminPassword: 'Azure12345!Password'
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: nic04.id
-        }
-      ]
-    }
-  }
-}
+]
