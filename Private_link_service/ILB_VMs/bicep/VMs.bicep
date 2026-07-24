@@ -1,16 +1,12 @@
 param location string = resourceGroup().location
 
-param vnetName string
-param subnetName string
-
-param adminUsername string = 'azureuser'
-
-@secure()
-param adminPassword string
-
-param vmSize string = 'Standard_B2s'
-
 var vmCount = 4
+var vnetName = 'vnet-provider'
+var subnetName = 'subnet-provider'
+
+var vmSize = 'Standard_B2s'
+var adminUsername = 'azureuser'
+var adminPassword = 'YourPassword123!'
 
 
 resource nsg 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
@@ -57,7 +53,6 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-09-01' = [
     location: location
 
     properties: {
-
       networkSecurityGroup: {
         id: nsg.id
       }
@@ -65,7 +60,6 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-09-01' = [
       ipConfigurations: [
         {
           name: 'ipconfig1'
-
           properties: {
 
             privateIPAllocationMethod: 'Dynamic'
@@ -77,7 +71,6 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-09-01' = [
                 subnetName
               )
             }
-
           }
         }
       ]
@@ -98,20 +91,11 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = [
         vmSize: vmSize
       }
 
-
       osProfile: {
-
         computerName: 'vm-provider-0${i}'
-
         adminUsername: adminUsername
-
         adminPassword: adminPassword
-
-        linuxConfiguration: {
-          disablePasswordAuthentication: false
-        }
       }
-
 
       storageProfile: {
 
@@ -127,21 +111,13 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = [
         }
       }
 
-
       networkProfile: {
-
         networkInterfaces: [
           {
             id: nic[i-1].id
           }
         ]
       }
-
     }
   }
-]
-
-
-output vmNames array = [
-  for i in range(1, vmCount + 1): 'vm-provider-0${i}'
 ]
