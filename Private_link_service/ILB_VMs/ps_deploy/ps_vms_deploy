@@ -1,6 +1,5 @@
 az deployment group create `
-  -g rg-p2s-lab `
-  -n provider-vms `
-  -f VMs.bicep
-
+  -g rg-consumer-dev-eus `
+  -f Consumer_VMs.bicep `
+  -n consumer-vms
 
