@@ -2,10 +2,18 @@ targetScope = 'resourceGroup'
 
 param location string = resourceGroup().location
 
+param adminUsername string = 'azureuser'
+
+@secure()
+param adminPassword string
+
 var vmCount = 4
 
 var vnetName = 'vnet-consumer'
-var subnetName = 'subnet-consumer'
+var subnetName = 'snet-vm'
+
+var vmPrefix = 'pl-consumer-vm'
+var nicPrefix = 'pl-consumer-nic'
 
 
 resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
@@ -21,7 +29,7 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing 
 
 resource nsg 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
 
-  name: 'nsg-consumer-vm'
+  name: 'nsg-pl-consumer-vm'
 
   location: location
 
@@ -49,10 +57,15 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
           sourceAddressPrefix: '*'
 
           destinationAddressPrefix: '*'
+
         }
+
       }
+
     ]
+
   }
+
 }
 
 
@@ -60,13 +73,12 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-09-01' = [
 
   for i in range(1, vmCount + 1): {
 
-    name: 'nic-consumer-0${i}'
+    name: '${nicPrefix}-${i}'
 
     location: location
 
 
     properties: {
-
 
       networkSecurityGroup: {
 
@@ -81,12 +93,9 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-09-01' = [
 
           name: 'ipconfig1'
 
-
           properties: {
 
-
             privateIPAllocationMethod: 'Dynamic'
-
 
             subnet: {
 
@@ -111,15 +120,12 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = [
 
   for i in range(1, vmCount + 1): {
 
-
-    name: 'vm-consumer-0${i}'
-
+    name: '${vmPrefix}-${i}'
 
     location: location
 
 
     properties: {
-
 
       hardwareProfile: {
 
@@ -130,21 +136,16 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = [
 
       osProfile: {
 
+        computerName: '${vmPrefix}-${i}'
 
-        computerName: 'vm-consumer-0${i}'
+        adminUsername: adminUsername
 
-
-        adminUsername: 'azureuser'
-
-
-        adminPassword: 'AzureLab123456789!'
-
+        adminPassword: adminPassword
 
       }
 
 
       storageProfile: {
-
 
         imageReference: {
 
@@ -170,12 +171,11 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = [
 
       networkProfile: {
 
-
         networkInterfaces: [
 
           {
 
-            id: nic[i-1].id
+            id: nic[i - 1].id
 
           }
 
@@ -192,6 +192,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = [
 
 output vmNames array = [
 
-  for i in range(1, vmCount + 1): 'vm-consumer-0${i}'
+  for i in range(1, vmCount + 1): '${vmPrefix}-${i}'
 
 ]
