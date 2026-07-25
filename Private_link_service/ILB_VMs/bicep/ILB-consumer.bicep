@@ -7,14 +7,9 @@ var subnetName = 'snet-vm'
 
 var lbName = 'ilb-consumer'
 var backendPoolName = 'consumer-backend-pool'
-
-var consumerNics = [
-  'pl-consumer-nic-1'
-  'pl-consumer-nic-2'
-  'pl-consumer-nic-3'
-  'pl-consumer-nic-4'
-  'pl-consumer-nic-5'
-]
+var frontendName = 'consumer-frontend-ip'
+var probeName = 'consumer-http-probe'
+var ruleName = 'consumer-http-rule'
 
 
 resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
@@ -28,7 +23,7 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing 
 }
 
 
-resource lb 'Microsoft.Network/loadBalancers@2023-09-01' = {
+resource ilb 'Microsoft.Network/loadBalancers@2023-09-01' = {
 
   name: lbName
   location: location
@@ -41,7 +36,7 @@ resource lb 'Microsoft.Network/loadBalancers@2023-09-01' = {
 
     frontendIPConfigurations: [
       {
-        name: 'frontend-ip'
+        name: frontendName
 
         properties: {
 
@@ -64,12 +59,16 @@ resource lb 'Microsoft.Network/loadBalancers@2023-09-01' = {
 
     probes: [
       {
-        name: 'tcp-probe'
+        name: probeName
 
         properties: {
+
           protocol: 'Tcp'
+
           port: 80
-          intervalInSeconds: 5
+
+          intervalInSeconds: 15
+
           numberOfProbes: 2
         }
       }
@@ -78,17 +77,25 @@ resource lb 'Microsoft.Network/loadBalancers@2023-09-01' = {
 
     loadBalancingRules: [
       {
-        name: 'http-rule'
+        name: ruleName
 
         properties: {
+
+          protocol: 'Tcp'
+
+          frontendPort: 80
+
+          backendPort: 80
+
 
           frontendIPConfiguration: {
             id: resourceId(
               'Microsoft.Network/loadBalancers/frontendIPConfigurations',
               lbName,
-              'frontend-ip'
+              frontendName
             )
           }
+
 
           backendAddressPool: {
             id: resourceId(
@@ -98,20 +105,21 @@ resource lb 'Microsoft.Network/loadBalancers@2023-09-01' = {
             )
           }
 
+
           probe: {
             id: resourceId(
               'Microsoft.Network/loadBalancers/probes',
               lbName,
-              'tcp-probe'
+              probeName
             )
           }
 
-          protocol: 'Tcp'
-          frontendPort: 80
-          backendPort: 80
 
           enableFloatingIP: false
+
           idleTimeoutInMinutes: 4
+
+          disableOutboundSnat: true
         }
       }
     ]
@@ -119,48 +127,10 @@ resource lb 'Microsoft.Network/loadBalancers@2023-09-01' = {
 }
 
 
-// Existing NIC references
+output loadBalancerName string = ilb.name
 
-resource existingConsumerNics 'Microsoft.Network/networkInterfaces@2023-09-01' existing = [
-  for nicName in consumerNics: {
-    name: nicName
-  }
-]
-
-
-// Attach NICs to ILB backend pool
-
-resource nicBackendAssociation 'Microsoft.Network/networkInterfaces@2023-09-01' = [
-  for i in range(0, length(consumerNics)): {
-
-    name: consumerNics[i]
-    location: location
-
-    properties: {
-
-      ipConfigurations: [
-        {
-          name: 'ipconfig1'
-
-          properties: {
-
-            loadBalancerBackendAddressPools: [
-              {
-                id: resourceId(
-                  'Microsoft.Network/loadBalancers/backendAddressPools',
-                  lbName,
-                  backendPoolName
-                )
-              }
-            ]
-          }
-        }
-      ]
-    }
-  }
-]
-
-
-output loadBalancerName string = lb.name
-
-output backendPool string = backendPoolName
+output backendPoolId string = resourceId(
+  'Microsoft.Network/loadBalancers/backendAddressPools',
+  lbName,
+  backendPoolName
+)
