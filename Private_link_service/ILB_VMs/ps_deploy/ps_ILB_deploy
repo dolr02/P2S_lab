@@ -1,4 +1,4 @@
 az deployment group create `
   -g rg-consumer-dev-eus `
-  -f /home/radek/ILB-consumer.bicep `
+  -f /home/radek/P2S_lab/Private_link_service/ILB_VMs/bicep/ILB-consumer.bicep `
   -n consumer-ilb
