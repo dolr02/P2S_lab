@@ -8,6 +8,14 @@ var subnetName = 'snet-vm'
 var lbName = 'ilb-consumer'
 var backendPoolName = 'consumer-backend-pool'
 
+var consumerNics = [
+  'pl-consumer-nic-1'
+  'pl-consumer-nic-2'
+  'pl-consumer-nic-3'
+  'pl-consumer-nic-4'
+  'pl-consumer-nic-5'
+]
+
 
 resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
   name: vnetName
@@ -46,15 +54,17 @@ resource lb 'Microsoft.Network/loadBalancers@2023-09-01' = {
       }
     ]
 
+
     backendAddressPools: [
       {
         name: backendPoolName
       }
     ]
 
+
     probes: [
       {
-        name: 'http-probe'
+        name: 'tcp-probe'
 
         properties: {
           protocol: 'Tcp'
@@ -64,6 +74,7 @@ resource lb 'Microsoft.Network/loadBalancers@2023-09-01' = {
         }
       }
     ]
+
 
     loadBalancingRules: [
       {
@@ -91,13 +102,14 @@ resource lb 'Microsoft.Network/loadBalancers@2023-09-01' = {
             id: resourceId(
               'Microsoft.Network/loadBalancers/probes',
               lbName,
-              'http-probe'
+              'tcp-probe'
             )
           }
 
           protocol: 'Tcp'
           frontendPort: 80
           backendPort: 80
+
           enableFloatingIP: false
           idleTimeoutInMinutes: 4
         }
@@ -107,22 +119,48 @@ resource lb 'Microsoft.Network/loadBalancers@2023-09-01' = {
 }
 
 
-resource nic1 'Microsoft.Network/networkInterfaces@2023-09-01' existing = {
-  name: 'pl-consumer-nic-1'
-}
+// Existing NIC references
 
-resource nic2 'Microsoft.Network/networkInterfaces@2023-09-01' existing = {
-  name: 'pl-consumer-nic-2'
-}
+resource existingConsumerNics 'Microsoft.Network/networkInterfaces@2023-09-01' existing = [
+  for nicName in consumerNics: {
+    name: nicName
+  }
+]
 
-resource nic3 'Microsoft.Network/networkInterfaces@2023-09-01' existing = {
-  name: 'pl-consumer-nic-3'
-}
 
-resource nic4 'Microsoft.Network/networkInterfaces@2023-09-01' existing = {
-  name: 'pl-consumer-nic-4'
-}
+// Attach NICs to ILB backend pool
 
-resource nic5 'Microsoft.Network/networkInterfaces@2023-09-01' existing = {
-  name: 'pl-consumer-nic-5'
-}
+resource nicBackendAssociation 'Microsoft.Network/networkInterfaces@2023-09-01' = [
+  for i in range(0, length(consumerNics)): {
+
+    name: consumerNics[i]
+    location: location
+
+    properties: {
+
+      ipConfigurations: [
+        {
+          name: 'ipconfig1'
+
+          properties: {
+
+            loadBalancerBackendAddressPools: [
+              {
+                id: resourceId(
+                  'Microsoft.Network/loadBalancers/backendAddressPools',
+                  lbName,
+                  backendPoolName
+                )
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]
+
+
+output loadBalancerName string = lb.name
+
+output backendPool string = backendPoolName
