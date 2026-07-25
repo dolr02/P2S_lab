@@ -1,6 +1,6 @@
 az deployment group create `
-  --resource-group rg-consumer-dev-eus `
-  --name VMs.deploy `
-  --template-file ./VMs.bicep
+  -g rg-p2s-lab `
+  -n provider-vms `
+  -f VMs.bicep
 
 

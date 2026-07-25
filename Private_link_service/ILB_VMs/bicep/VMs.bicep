@@ -1,13 +1,21 @@
+targetScope = 'resourceGroup'
+
 param location string = resourceGroup().location
 
 var vmCount = 4
-var vnetName = 'vnet-provider'
-var subnetName = 'subnet-provider'
 
-var vmSize = 'Standard_B2s'
-var adminUsername = 'azureuser'
-var adminPassword = 'YourPassword123!'
+resource ilb 'Microsoft.Network/loadBalancers@2023-09-01' existing = {
+  name: 'ilb-provider'
+}
 
+resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
+  name: 'vnet-provider'
+}
+
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing = {
+  parent: vnet
+  name: 'app-subnet'
+}
 
 resource nsg 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
   name: 'nsg-provider-vm'
@@ -16,7 +24,7 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
   properties: {
     securityRules: [
       {
-        name: 'Allow-HTTP'
+        name: 'AllowHTTP'
         properties: {
           priority: 100
           direction: 'Inbound'
@@ -29,7 +37,7 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
         }
       }
       {
-        name: 'Allow-SSH'
+        name: 'AllowSSH'
         properties: {
           priority: 110
           direction: 'Inbound'
@@ -45,7 +53,6 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
   }
 }
 
-
 resource nic 'Microsoft.Network/networkInterfaces@2023-09-01' = [
   for i in range(1, vmCount + 1): {
 
@@ -53,6 +60,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-09-01' = [
     location: location
 
     properties: {
+
       networkSecurityGroup: {
         id: nsg.id
       }
@@ -60,24 +68,30 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-09-01' = [
       ipConfigurations: [
         {
           name: 'ipconfig1'
+
           properties: {
 
             privateIPAllocationMethod: 'Dynamic'
 
             subnet: {
-              id: resourceId(
-                'Microsoft.Network/virtualNetworks/subnets',
-                vnetName,
-                subnetName
-              )
+              id: subnet.id
             }
+
+            loadBalancerBackendAddressPools: [
+              {
+                id: resourceId(
+                  'Microsoft.Network/loadBalancers/backendAddressPools',
+                  ilb.name,
+                  'backend-pool'
+                )
+              }
+            ]
           }
         }
       ]
     }
   }
 ]
-
 
 resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = [
   for i in range(1, vmCount + 1): {
@@ -88,17 +102,24 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = [
     properties: {
 
       hardwareProfile: {
-        vmSize: vmSize
+        vmSize: 'Standard_B1s'
       }
 
       osProfile: {
         computerName: 'vm-provider-0${i}'
-        adminUsername: adminUsername
-        adminPassword: adminPassword
+        adminUsername: 'azureuser'
+        adminPassword: 'AzureLab123456789!'
+
+        customData: base64('''#!/bin/bash
+apt-get update
+apt-get install -y nginx
+systemctl enable nginx
+systemctl start nginx
+echo "Hello from Provider VM ${i}" > /var/www/html/index.html
+''')
       }
 
       storageProfile: {
-
         imageReference: {
           publisher: 'Canonical'
           offer: '0001-com-ubuntu-server-jammy'
@@ -114,10 +135,14 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = [
       networkProfile: {
         networkInterfaces: [
           {
-            id: nic[i-1].id
+            id: nic[i - 1].id
           }
         ]
       }
     }
   }
+]
+
+output vmNames array = [
+  for i in range(1, vmCount + 1): 'vm-provider-0${i}'
 ]
