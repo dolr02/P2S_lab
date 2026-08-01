@@ -1,5 +1,3 @@
-// vm.bicep
-
 param location string = resourceGroup().location
 param adminPassword string
 
@@ -14,7 +12,11 @@ resource nicImage 'Microsoft.Network/networkInterfaces@2022-09-01' = {
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet-dev-eus-01', 'snet_image_web')
+            id: resourceId(
+              'Microsoft.Network/virtualNetworks/subnets',
+              'vnet-dev-eus-01',
+              'snet-images-web'
+            )
           }
         }
       }
@@ -33,7 +35,11 @@ resource nicVideo 'Microsoft.Network/networkInterfaces@2022-09-01' = {
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet-dev-eus-01', 'snet_video_web')
+            id: resourceId(
+              'Microsoft.Network/virtualNetworks/subnets',
+              'vnet-dev-eus-01',
+              'snet-videos-web'
+            )
           }
         }
       }
