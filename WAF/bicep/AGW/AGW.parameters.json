@@ -12,7 +12,7 @@
     },
 
     "subnetName": {
-      "value": "agw-subnet"
+      "value": "snet-appgw-dev-eus-01"
     },
 
     "appGwName": {

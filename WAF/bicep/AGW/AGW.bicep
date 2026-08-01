@@ -7,18 +7,18 @@ param appGwName string = 'p2slab-appgw'
 param publicIpName string = 'p2slab-appgw-pip'
 
 
-resource vnet 'Microsoft.Network/virtualNetworks@2022-09-01' existing = {
+resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
   name: vnetName
 }
 
 
-resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-09-01' existing = {
+resource appGwSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing = {
   parent: vnet
   name: subnetName
 }
 
 
-resource publicIp 'Microsoft.Network/publicIPAddresses@2022-09-01' = {
+resource publicIp 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
   name: publicIpName
   location: location
 
@@ -32,17 +32,17 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2022-09-01' = {
 }
 
 
-resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
+resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
 
   name: appGwName
   location: location
+
 
   properties: {
 
     sku: {
       name: 'WAF_v2'
       tier: 'WAF_v2'
-      capacity: 2
     }
 
 
@@ -52,7 +52,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
 
         properties: {
           subnet: {
-            id: subnet.id
+            id: appGwSubnet.id
           }
         }
       }
@@ -61,7 +61,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
 
     frontendIPConfigurations: [
       {
-        name: 'frontendPublicIP'
+        name: 'frontendPublicIp'
 
         properties: {
           publicIPAddress: {
@@ -86,9 +86,6 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
     backendAddressPools: [
       {
         name: 'backendPool'
-
-        properties: {
-        }
       }
     ]
 
@@ -116,10 +113,9 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
             id: resourceId(
               'Microsoft.Network/applicationGateways/frontendIPConfigurations',
               appGwName,
-              'frontendPublicIP'
+              'frontendPublicIp'
             )
           }
-
 
           frontendPort: {
             id: resourceId(
@@ -128,7 +124,6 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
               'port80'
             )
           }
-
 
           protocol: 'Http'
         }
@@ -154,7 +149,6 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
             )
           }
 
-
           backendAddressPool: {
             id: resourceId(
               'Microsoft.Network/applicationGateways/backendAddressPools',
@@ -162,7 +156,6 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
               'backendPool'
             )
           }
-
 
           backendHttpSettings: {
             id: resourceId(
@@ -176,11 +169,11 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
     ]
 
 
-    enableHttp2: true
-
     webApplicationFirewallConfiguration: {
       enabled: true
       firewallMode: 'Prevention'
+      ruleSetType: 'OWASP'
+      ruleSetVersion: '3.2'
     }
   }
 }
