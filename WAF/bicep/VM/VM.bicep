@@ -1,160 +1,371 @@
 param location string = resourceGroup().location
 
-// EXISTUJÍCÍ NIC Z VM
-resource nicImage 'Microsoft.Network/networkInterfaces@2022-09-01' existing = {
-  name: 'nic-image'
-}
+param vnetName string = 'vnet-dev-eus-01'
 
-resource nicVideo 'Microsoft.Network/networkInterfaces@2022-09-01' existing = {
-  name: 'nic-video'
-}
+param vmVideoName string = 'vm-video'
+param vmImageName string = 'vm-image'
 
-// EXISTUJÍCÍ VNET + SUBNET PRO AGW
+param adminUsername string = 'azureuser'
+
+@secure()
+param adminPassword string
+
+
 resource vnet 'Microsoft.Network/virtualNetworks@2022-09-01' existing = {
-  name: 'vnet-dev-eus-01'
+  name: vnetName
 }
 
-resource snetAppGw 'Microsoft.Network/virtualNetworks/subnets@2022-09-01' existing = {
-  name: 'snet-dev-eus-01'
-  scope: vnet
-}
 
-// PUBLIC IP PRO AGW
-resource pip 'Microsoft.Network/publicIPAddresses@2022-09-01' = {
-  name: 'p2slab-appgw-pip'
-  location: location
-  sku: { name: 'Standard' }
-  properties: { publicIPAllocationMethod: 'Static' }
-}
+// =====================
+// SUBNETS
+// =====================
 
-// WAF POLICY
-resource wafPolicy 'Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies@2022-09-01' = {
-  name: 'p2slab-waf-policy'
-  location: location
+resource videoSubnet 'Microsoft.Network/virtualNetworks/subnets@2022-09-01' = {
+  parent: vnet
+  name: 'snet-videos-web'
+
   properties: {
-    policySettings: { enabledState: 'Enabled', mode: 'Prevention' }
-    managedRules: { managedRuleSets: [ { ruleSetType: 'OWASP', ruleSetVersion: '3.2' } ] }
+    addressPrefix: '10.0.20.0/24'
   }
 }
 
-// APPLICATION GATEWAY
-resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
-  name: 'p2slab-appgw'
-  location: location
-  sku: { name: 'WAF_v2', tier: 'WAF_v2' }
+
+resource imageSubnet 'Microsoft.Network/virtualNetworks/subnets@2022-09-01' = {
+  parent: vnet
+  name: 'snet-images-web'
 
   properties: {
-    gatewayIPConfigurations: [
-      {
-        name: 'gw-ip'
-        properties: { subnet: { id: snetAppGw.id } }
-      }
-    ]
+    addressPrefix: '10.0.30.0/24'
+  }
+}
 
-    frontendIPConfigurations: [
-      {
-        name: 'frontend-ip'
-        properties: { publicIPAddress: { id: pip.id } }
-      }
-    ]
 
-    frontendPorts: [
-      {
-        name: 'port-80'
-        properties: { port: 80 }
-      }
-    ]
+// =====================
+// NSG
+// =====================
 
-    backendAddressPools: [
+resource webNsg 'Microsoft.Network/networkSecurityGroups@2022-09-01' = {
+
+  name: 'nsg-web-backend'
+
+  location: location
+
+
+  properties: {
+
+    securityRules: [
+
       {
-        name: 'pool-image'
+        name: 'allow-http'
+
         properties: {
-          backendIPConfigurations: [
-            { id: nicImage.properties.ipConfigurations[0].id }
-          ]
-        }
-      },
-      {
-        name: 'pool-video'
-        properties: {
-          backendIPConfigurations: [
-            { id: nicVideo.properties.ipConfigurations[0].id }
-          ]
-        }
-      }
-    ]
 
-    backendHttpSettingsCollection: [
-      {
-        name: 'http'
-        properties: { port: 80, protocol: 'Http', requestTimeout: 30 }
-      }
-    ]
+          priority: 100
 
-    httpListeners: [
-      {
-        name: 'listener-image'
-        properties: {
-          frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', appGw.name, 'frontend-ip')
-          }
-          frontendPort: {
-            id: resourceId('Microsoft.Network/applicationGateways/frontendPorts', appGw.name, 'port-80')
-          }
-          protocol: 'Http'
-        }
-      },
-      {
-        name: 'listener-video'
-        properties: {
-          frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', appGw.name, 'frontend-ip')
-          }
-          frontendPort: {
-            id: resourceId('Microsoft.Network/applicationGateways/frontendPorts', appGw.name, 'port-80')
-          }
-          protocol: 'Http'
+          direction: 'Inbound'
+
+          access: 'Allow'
+
+          protocol: 'Tcp'
+
+          sourcePortRange: '*'
+
+          destinationPortRange: '80'
+
+          sourceAddressPrefix: '*'
+
+          destinationAddressPrefix: '*'
+
         }
       }
-    ]
 
-    requestRoutingRules: [
       {
-        name: 'rule-image'
+        name: 'allow-ssh'
+
         properties: {
-          ruleType: 'Basic'
-          httpListener: {
-            id: resourceId('Microsoft.Network/applicationGateways/httpListeners', appGw.name, 'listener-image')
-          }
-          backendAddressPool: {
-            id: resourceId('Microsoft.Network/applicationGateways/backendAddressPools', appGw.name, 'pool-image')
-          }
-          backendHttpSettings: {
-            id: resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', appGw.name, 'http')
-          }
-        }
-      },
-      {
-        name: 'rule-video'
-        properties: {
-          ruleType: 'Basic'
-          httpListener: {
-            id: resourceId('Microsoft.Network/applicationGateways/httpListeners', appGw.name, 'listener-video')
-          }
-          backendAddressPool: {
-            id: resourceId('Microsoft.Network/applicationGateways/backendAddressPools', appGw.name, 'pool-video')
-          }
-          backendHttpSettings: {
-            id: resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', appGw.name, 'http')
-          }
+
+          priority: 200
+
+          direction: 'Inbound'
+
+          access: 'Allow'
+
+          protocol: 'Tcp'
+
+          sourcePortRange: '*'
+
+          destinationPortRange: '22'
+
+          sourceAddressPrefix: '*'
+
+          destinationAddressPrefix: '*'
+
         }
       }
-    ]
 
-    webApplicationFirewallConfiguration: {
-      enabled: true
-      firewallMode: 'Prevention'
-      policy: { id: wafPolicy.id }
+    ]
+  }
+}
+
+
+
+// =====================
+// NIC VIDEO
+// =====================
+
+resource nicVideo 'Microsoft.Network/networkInterfaces@2022-09-01' = {
+
+  name: '${vmVideoName}-nic'
+
+  location: location
+
+
+  properties: {
+
+    networkSecurityGroup: {
+      id: webNsg.id
     }
+
+
+    ipConfigurations: [
+
+      {
+
+        name: 'ipconfig1'
+
+        properties: {
+
+          privateIPAllocationMethod: 'Dynamic'
+
+
+          subnet: {
+            id: videoSubnet.id
+          }
+
+        }
+      }
+
+    ]
+  }
+}
+
+
+
+// =====================
+// NIC IMAGE
+// =====================
+
+resource nicImage 'Microsoft.Network/networkInterfaces@2022-09-01' = {
+
+  name: '${vmImageName}-nic'
+
+  location: location
+
+
+  properties: {
+
+    networkSecurityGroup: {
+      id: webNsg.id
+    }
+
+
+    ipConfigurations: [
+
+      {
+
+        name: 'ipconfig1'
+
+        properties: {
+
+          privateIPAllocationMethod: 'Dynamic'
+
+
+          subnet: {
+            id: imageSubnet.id
+          }
+
+        }
+      }
+
+    ]
+  }
+}
+
+
+
+// =====================
+// CLOUD INIT
+// =====================
+
+var nginxVideo = '''
+#!/bin/bash
+apt update
+apt install nginx -y
+echo "VIDEO BACKEND OK - vm-video" > /var/www/html/index.html
+systemctl enable nginx
+systemctl restart nginx
+'''
+
+
+var nginxImage = '''
+#!/bin/bash
+apt update
+apt install nginx -y
+echo "IMAGE BACKEND OK - vm-image" > /var/www/html/index.html
+systemctl enable nginx
+systemctl restart nginx
+'''
+
+
+
+// =====================
+// VM VIDEO
+// =====================
+
+resource vmVideo 'Microsoft.Compute/virtualMachines@2023-03-01' = {
+
+  name: vmVideoName
+
+  location: location
+
+
+  properties: {
+
+    hardwareProfile: {
+
+      vmSize: 'Standard_B2s'
+
+    }
+
+
+    osProfile: {
+
+      computerName: vmVideoName
+
+      adminUsername: adminUsername
+
+      adminPassword: adminPassword
+
+
+      customData: base64(nginxVideo)
+
+    }
+
+
+    storageProfile: {
+
+      imageReference: {
+
+        publisher: 'Canonical'
+
+        offer: '0001-com-ubuntu-server-jammy'
+
+        sku: '22_04-lts-gen2'
+
+        version: 'latest'
+
+      }
+
+
+      osDisk: {
+
+        createOption: 'FromImage'
+
+      }
+
+    }
+
+
+    networkProfile: {
+
+      networkInterfaces: [
+
+        {
+
+          id: nicVideo.id
+
+        }
+
+      ]
+
+    }
+
+  }
+}
+
+
+
+// =====================
+// VM IMAGE
+// =====================
+
+resource vmImage 'Microsoft.Compute/virtualMachines@2023-03-01' = {
+
+  name: vmImageName
+
+  location: location
+
+
+  properties: {
+
+    hardwareProfile: {
+
+      vmSize: 'Standard_B2s'
+
+    }
+
+
+    osProfile: {
+
+      computerName: vmImageName
+
+      adminUsername: adminUsername
+
+      adminPassword: adminPassword
+
+
+      customData: base64(nginxImage)
+
+    }
+
+
+    storageProfile: {
+
+      imageReference: {
+
+        publisher: 'Canonical'
+
+        offer: '0001-com-ubuntu-server-jammy'
+
+        sku: '22_04-lts-gen2'
+
+        version: 'latest'
+
+      }
+
+
+      osDisk: {
+
+        createOption: 'FromImage'
+
+      }
+
+    }
+
+
+    networkProfile: {
+
+      networkInterfaces: [
+
+        {
+
+          id: nicImage.id
+
+        }
+
+      ]
+
+    }
+
   }
 }
