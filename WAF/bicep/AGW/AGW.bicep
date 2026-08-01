@@ -1,7 +1,7 @@
 param location string = 'eastus'
 
-param vnetName string = 'vnet-dev-eus-01'
-param subnetName string = 'snet-dev-eus-01'
+param vnetName string
+param subnetName string
 
 param appGwName string = 'p2slab-appgw'
 param publicIpName string = 'p2slab-appgw-pip'
@@ -41,6 +41,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
     sku: {
       name: 'Standard_v2'
       tier: 'Standard_v2'
+      capacity: 2
     }
 
 
