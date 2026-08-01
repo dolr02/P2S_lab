@@ -32,6 +32,28 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2022-09-01' = {
 }
 
 
+resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2022-09-01' = {
+  name: '${appGwName}-waf-policy'
+  location: location
+
+  properties: {
+    policySettings: {
+      enabledState: 'Enabled'
+      mode: 'Prevention'
+    }
+
+    managedRules: {
+      managedRuleSets: [
+        {
+          ruleSetType: 'OWASP'
+          ruleSetVersion: '3.2'
+        }
+      ]
+    }
+  }
+}
+
+
 resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
 
   name: appGwName
@@ -76,9 +98,32 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
     frontendPorts: [
       {
         name: 'port80'
+        properties: {
+          port: 80
+        }
+      }
+    ]
+
+
+    backendAddressPools: [
+      {
+        name: 'backendPool'
+
+        properties: {
+          backendAddresses: []
+        }
+      }
+    ]
+
+
+    backendHttpSettingsCollection: [
+      {
+        name: 'httpSettings'
 
         properties: {
           port: 80
+          protocol: 'Http'
+          cookieBasedAffinity: 'Disabled'
         }
       }
     ]
@@ -89,7 +134,6 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
         name: 'listener80'
 
         properties: {
-
           frontendIPConfiguration: {
             id: resourceId(
               'Microsoft.Network/applicationGateways/frontendIPConfigurations',
@@ -97,7 +141,6 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
               'frontendPublicIP'
             )
           }
-
 
           frontendPort: {
             id: resourceId(
@@ -107,32 +150,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
             )
           }
 
-
           protocol: 'Http'
-        }
-      }
-    ]
-
-
-    backendAddressPools: [
-      {
-        name: 'emptyBackend'
-
-        properties: {}
-      }
-    ]
-
-
-    backendHttpSettingsCollection: [
-      {
-        name: 'backendSettings'
-
-        properties: {
-
-          port: 80
-          protocol: 'Http'
-          cookieBasedAffinity: 'Disabled'
-
         }
       }
     ]
@@ -160,7 +178,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
             id: resourceId(
               'Microsoft.Network/applicationGateways/backendAddressPools',
               appGwName,
-              'emptyBackend'
+              'backendPool'
             )
           }
 
@@ -168,7 +186,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
             id: resourceId(
               'Microsoft.Network/applicationGateways/backendHttpSettingsCollection',
               appGwName,
-              'backendSettings'
+              'httpSettings'
             )
           }
         }
@@ -176,15 +194,8 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
     ]
 
 
-    webApplicationFirewallConfiguration: {
-
-      enabled: true
-
-      firewallMode: 'Detection'
-
-      ruleSetType: 'OWASP'
-
-      ruleSetVersion: '3.2'
+    firewallPolicy: {
+      id: wafPolicy.id
     }
 
   }
