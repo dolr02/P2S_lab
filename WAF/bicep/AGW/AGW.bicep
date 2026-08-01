@@ -33,17 +33,18 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2022-09-01' = {
 
 
 resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
+
   name: appGwName
   location: location
 
-
-  sku: {
-    name: 'WAF_v2'
-    tier: 'WAF_v2'
-  }
-
-
   properties: {
+
+    sku: {
+      name: 'WAF_v2'
+      tier: 'WAF_v2'
+      capacity: 2
+    }
+
 
     gatewayIPConfigurations: [
       {
@@ -73,7 +74,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
 
     frontendPorts: [
       {
-        name: 'frontendPort80'
+        name: 'port80'
 
         properties: {
           port: 80
@@ -85,13 +86,16 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
     backendAddressPools: [
       {
         name: 'backendPool'
+
+        properties: {
+        }
       }
     ]
 
 
     backendHttpSettingsCollection: [
       {
-        name: 'backendHttpSettings'
+        name: 'httpSettings'
 
         properties: {
           port: 80
@@ -104,7 +108,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
 
     httpListeners: [
       {
-        name: 'httpListener'
+        name: 'listener80'
 
         properties: {
 
@@ -121,7 +125,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
             id: resourceId(
               'Microsoft.Network/applicationGateways/frontendPorts',
               appGwName,
-              'frontendPort80'
+              'port80'
             )
           }
 
@@ -142,12 +146,11 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
 
           ruleType: 'Basic'
 
-
           httpListener: {
             id: resourceId(
               'Microsoft.Network/applicationGateways/httpListeners',
               appGwName,
-              'httpListener'
+              'listener80'
             )
           }
 
@@ -165,7 +168,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
             id: resourceId(
               'Microsoft.Network/applicationGateways/backendHttpSettingsCollection',
               appGwName,
-              'backendHttpSettings'
+              'httpSettings'
             )
           }
         }
@@ -175,7 +178,9 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
 
     enableHttp2: true
 
-
-    firewallPolicy: null
+    webApplicationFirewallConfiguration: {
+      enabled: true
+      firewallMode: 'Prevention'
+    }
   }
 }
