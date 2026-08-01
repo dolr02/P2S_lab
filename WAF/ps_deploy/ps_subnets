@@ -1,4 +1,3 @@
-az network vnet update \
-  --resource-group rg-p2s-lab \
-  --name vnet-dev-eus-01 \
-  --set properties="$(cat subnets.json)"
+az deployment group create `
+ --resource-group rg-p2s-lab `
+ --template-file ./subnets.json

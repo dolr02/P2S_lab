@@ -1,23 +1,22 @@
 {
-  "properties": {
-    "addressSpace": {
-      "addressPrefixes": [
-        "10.0.0.0/16"
-      ]
-    },
-    "subnets": [
-      {
-        "name": "snet_image_web",
-        "properties": {
-          "addressPrefix": "10.0.2.0/24"
-        }
-      },
-      {
-        "name": "snet_video_web",
-        "properties": {
-          "addressPrefix": "10.0.3.0/24"
-        }
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks/subnets",
+      "apiVersion": "2022-09-01",
+      "name": "vnet-dev-eus-01/snet-videos-web",
+      "properties": {
+        "addressPrefix": "10.0.2.0/24"
       }
-    ]
-  }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks/subnets",
+      "apiVersion": "2022-09-01",
+      "name": "vnet-dev-eus-01/snet-images-web",
+      "properties": {
+        "addressPrefix": "10.0.3.0/24"
+      }
+    }
+  ]
 }
