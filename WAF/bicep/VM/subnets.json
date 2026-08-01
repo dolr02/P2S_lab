@@ -1,0 +1,23 @@
+{
+  "properties": {
+    "addressSpace": {
+      "addressPrefixes": [
+        "10.0.0.0/16"
+      ]
+    },
+    "subnets": [
+      {
+        "name": "snet_image_web",
+        "properties": {
+          "addressPrefix": "10.0.2.0/24"
+        }
+      },
+      {
+        "name": "snet_video_web",
+        "properties": {
+          "addressPrefix": "10.0.3.0/24"
+        }
+      }
+    ]
+  }
+}
