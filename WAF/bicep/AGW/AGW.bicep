@@ -3,7 +3,7 @@ param appGwName string = 'myAppGw'
 param vnetName string
 param subnetName string
 param publicIpName string = 'myAppGwPip'
-param backendIp string
+param backendIp string = '10.0.0.4'
 
 // EXISTUJÍCÍ VNET
 resource vnet 'Microsoft.Network/virtualNetworks@2022-09-01' existing = {
@@ -28,7 +28,7 @@ resource pip 'Microsoft.Network/publicIPAddresses@2022-09-01' = {
   }
 }
 
-// APPLICATION GATEWAY
+// APPLICATION GATEWAY WAF_v2
 resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
   name: appGwName
   location: location
@@ -85,7 +85,6 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
         properties: {
           port: 80
           protocol: 'Http'
-          cookieBasedAffinity: 'Disabled'
         }
       }
     ]

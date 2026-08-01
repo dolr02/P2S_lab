@@ -3,3 +3,4 @@ az deployment group create `
   --template-file ./AGW.bicep `
   --parameters "$(Get-Content ./parameters.json -Raw)"
 
+
