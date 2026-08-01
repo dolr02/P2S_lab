@@ -1,20 +1,10 @@
-targetScope = 'resourceGroup'
-
 param location string = resourceGroup().location
 
 param vnetName string = 'vnet-dev-eus-01'
-param gatewaySubnetName string = 'GatewaySubnet'
+param subnetName string = 'GatewaySubnet'
 
 param appGwName string = 'p2slab-appgw'
 param publicIpName string = 'p2slab-appgw-pip'
-
-param skuCapacity int = 2
-
-@allowed([
-  'Detection'
-  'Prevention'
-])
-param wafMode string = 'Prevention'
 
 
 resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
@@ -22,9 +12,9 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
 }
 
 
-resource gatewaySubnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing = {
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing = {
   parent: vnet
-  name: gatewaySubnetName
+  name: subnetName
 }
 
 
@@ -51,11 +41,11 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
   sku: {
     name: 'WAF_v2'
     tier: 'WAF_v2'
-    capacity: skuCapacity
   }
 
 
   properties: {
+
 
     gatewayIPConfigurations: [
       {
@@ -63,7 +53,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
 
         properties: {
           subnet: {
-            id: gatewaySubnet.id
+            id: subnet.id
           }
         }
       }
@@ -72,7 +62,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
 
     frontendIPConfigurations: [
       {
-        name: 'frontendPublicIP'
+        name: 'frontendIP'
 
         properties: {
           publicIPAddress: {
@@ -85,7 +75,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
 
     frontendPorts: [
       {
-        name: 'frontendPort80'
+        name: 'port80'
 
         properties: {
           port: 80
@@ -97,24 +87,18 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
     backendAddressPools: [
       {
         name: 'backendPool'
-
-        properties: {}
       }
     ]
 
 
     backendHttpSettingsCollection: [
       {
-        name: 'backendHttpSettings'
+        name: 'httpSettings'
 
         properties: {
-
           port: 80
           protocol: 'Http'
-
           cookieBasedAffinity: 'Disabled'
-
-          requestTimeout: 20
         }
       }
     ]
@@ -122,27 +106,17 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
 
     httpListeners: [
       {
-        name: 'httpListener'
+        name: 'listener'
 
         properties: {
 
           frontendIPConfiguration: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/frontendIPConfigurations',
-              appGwName,
-              'frontendPublicIP'
-            )
+            id: resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', appGwName, 'frontendIP')
           }
-
 
           frontendPort: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/frontendPorts',
-              appGwName,
-              'frontendPort80'
-            )
+            id: resourceId('Microsoft.Network/applicationGateways/frontendPorts', appGwName, 'port80')
           }
-
 
           protocol: 'Http'
         }
@@ -162,44 +136,28 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
 
 
           httpListener: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/httpListeners',
-              appGwName,
-              'httpListener'
-            )
+            id: resourceId('Microsoft.Network/applicationGateways/httpListeners', appGwName, 'listener')
           }
 
 
           backendAddressPool: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/backendAddressPools',
-              appGwName,
-              'backendPool'
-            )
+            id: resourceId('Microsoft.Network/applicationGateways/backendAddressPools', appGwName, 'backendPool')
           }
 
 
           backendHttpSettings: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/backendHttpSettingsCollection',
-              appGwName,
-              'backendHttpSettings'
-            )
+            id: resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', appGwName, 'httpSettings')
           }
-
         }
       }
     ]
-
-
-    firewallPolicy: null
 
 
     webApplicationFirewallConfiguration: {
 
       enabled: true
 
-      firewallMode: wafMode
+      firewallMode: 'Prevention'
 
       ruleSetType: 'OWASP'
 
