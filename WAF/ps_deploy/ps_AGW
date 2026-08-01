@@ -3,4 +3,6 @@ az deployment group create `
  --template-file ./AGW.bicep `
  --parameters `
  vmImageIp=10.0.30.4 `
- vmVideoIp=10.0.20.4
+ vmVideoIp=10.0.20.4 `
+ vnetName=vnet-dev-eus-01 `
+ subnetName=snet-dev-eus-01

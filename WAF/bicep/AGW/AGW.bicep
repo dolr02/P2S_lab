@@ -1,26 +1,30 @@
 param location string = resourceGroup().location
 
-param vnetName string = 'vnet-dev-eus-01'
-param subnetName string = 'snet-dev-eus-01'
+param vnetName string
+param subnetName string
 
 param appGwName string = 'p2slab-appgw'
 param publicIpName string = 'p2slab-appgw-pip'
 
-
-// VM PRIVATE IPs
 param vmImageIp string
 param vmVideoIp string
 
 
+// EXISTING VNET
 
 resource vnet 'Microsoft.Network/virtualNetworks@2022-09-01' existing = {
   name: vnetName
 }
 
 
+// EXISTING AGW SUBNET
+
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-09-01' existing = {
+
   parent: vnet
+
   name: subnetName
+
 }
 
 
@@ -32,13 +36,18 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2022-09-01' = {
 
   location: location
 
+
   sku: {
     name: 'Standard'
   }
 
+
   properties: {
+
     publicIPAllocationMethod: 'Static'
+
   }
+
 }
 
 
@@ -56,22 +65,34 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
 
 
     sku: {
+
       name: 'Standard_v2'
+
       tier: 'Standard_v2'
+
       capacity: 2
+
     }
+
 
 
     gatewayIPConfigurations: [
 
       {
+
         name: 'appGatewayIpConfig'
 
+
         properties: {
+
           subnet: {
+
             id: subnet.id
+
           }
+
         }
+
       }
 
     ]
@@ -81,15 +102,20 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
     frontendIPConfigurations: [
 
       {
+
         name: 'frontendPublicIP'
+
 
         properties: {
 
           publicIPAddress: {
+
             id: publicIp.id
+
           }
 
         }
+
       }
 
     ]
@@ -99,10 +125,14 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
     frontendPorts: [
 
       {
+
         name: 'port80'
 
+
         properties: {
+
           port: 80
+
         }
 
       }
@@ -114,36 +144,43 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
     backendAddressPools: [
 
       {
+
         name: 'pool-image'
 
+
         properties: {
 
           backendAddresses: [
 
             {
+
               ipAddress: vmImageIp
+
             }
 
           ]
 
         }
-      }
 
+      }, {
 
-      {
         name: 'pool-video'
 
+
         properties: {
 
           backendAddresses: [
 
             {
+
               ipAddress: vmVideoIp
+
             }
 
           ]
 
         }
+
       }
 
     ]
@@ -153,7 +190,9 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
     backendHttpSettingsCollection: [
 
       {
-        name: 'http80'
+
+        name: 'backend-http'
+
 
         properties: {
 
@@ -176,59 +215,37 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
     httpListeners: [
 
       {
-        name: 'listener-image'
+
+        name: 'listener80'
+
 
         properties: {
 
+
           frontendIPConfiguration: {
+
             id: resourceId(
               'Microsoft.Network/applicationGateways/frontendIPConfigurations',
               appGwName,
               'frontendPublicIP'
             )
+
           }
 
 
           frontendPort: {
+
             id: resourceId(
               'Microsoft.Network/applicationGateways/frontendPorts',
               appGwName,
               'port80'
             )
+
           }
 
 
           protocol: 'Http'
 
-        }
-
-      }
-
-
-      {
-        name: 'listener-video'
-
-        properties: {
-
-          frontendIPConfiguration: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/frontendIPConfigurations',
-              appGwName,
-              'frontendPublicIP'
-            )
-          }
-
-
-          frontendPort: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/frontendPorts',
-              appGwName,
-              'port80'
-            )
-          }
-
-
-          protocol: 'Http'
 
         }
 
@@ -241,7 +258,9 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
     requestRoutingRules: [
 
       {
-        name: 'rule-image'
+
+        name: 'rule80'
+
 
         properties: {
 
@@ -250,71 +269,39 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
           priority: 100
 
 
+
           httpListener: {
+
             id: resourceId(
               'Microsoft.Network/applicationGateways/httpListeners',
               appGwName,
-              'listener-image'
+              'listener80'
             )
+
           }
 
 
+
           backendAddressPool: {
+
             id: resourceId(
               'Microsoft.Network/applicationGateways/backendAddressPools',
               appGwName,
               'pool-image'
             )
+
           }
+
 
 
           backendHttpSettings: {
+
             id: resourceId(
               'Microsoft.Network/applicationGateways/backendHttpSettingsCollection',
               appGwName,
-              'http80'
+              'backend-http'
             )
-          }
 
-        }
-
-      }
-
-
-      {
-        name: 'rule-video'
-
-        properties: {
-
-          ruleType: 'Basic'
-
-          priority: 200
-
-
-          httpListener: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/httpListeners',
-              appGwName,
-              'listener-video'
-            )
-          }
-
-
-          backendAddressPool: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/backendAddressPools',
-              appGwName,
-              'pool-video'
-            )
-          }
-
-
-          backendHttpSettings: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/backendHttpSettingsCollection',
-              appGwName,
-              'http80'
-            )
           }
 
         }
