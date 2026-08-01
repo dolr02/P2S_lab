@@ -1,24 +1,24 @@
 param location string = 'eastus'
 
-param vnetName string
-param subnetName string
+param vnetName string = 'vnet-dev-eus-01'
+param subnetName string = 'snet-dev-eus-01'
 
 param appGwName string = 'p2slab-appgw'
 param publicIpName string = 'p2slab-appgw-pip'
 
 
-resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
+resource vnet 'Microsoft.Network/virtualNetworks@2022-09-01' existing = {
   name: vnetName
 }
 
 
-resource appGwSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing = {
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-09-01' existing = {
   parent: vnet
   name: subnetName
 }
 
 
-resource publicIp 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
+resource publicIp 'Microsoft.Network/publicIPAddresses@2022-09-01' = {
   name: publicIpName
   location: location
 
@@ -32,17 +32,15 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
 }
 
 
-resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
-
+resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
   name: appGwName
   location: location
-
 
   properties: {
 
     sku: {
-      name: 'WAF_v2'
-      tier: 'WAF_v2'
+      name: 'Standard_v2'
+      tier: 'Standard_v2'
     }
 
 
@@ -52,7 +50,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
 
         properties: {
           subnet: {
-            id: appGwSubnet.id
+            id: subnet.id
           }
         }
       }
@@ -61,7 +59,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
 
     frontendIPConfigurations: [
       {
-        name: 'frontendPublicIp'
+        name: 'frontendPublicIP'
 
         properties: {
           publicIPAddress: {
@@ -86,6 +84,8 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
     backendAddressPools: [
       {
         name: 'backendPool'
+
+        properties: {}
       }
     ]
 
@@ -108,12 +108,11 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
         name: 'listener80'
 
         properties: {
-
           frontendIPConfiguration: {
             id: resourceId(
               'Microsoft.Network/applicationGateways/frontendIPConfigurations',
               appGwName,
-              'frontendPublicIp'
+              'frontendPublicIP'
             )
           }
 
@@ -136,10 +135,8 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
         name: 'rule80'
 
         properties: {
-
-          priority: 100
-
           ruleType: 'Basic'
+          priority: 100
 
           httpListener: {
             id: resourceId(
@@ -167,13 +164,5 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
         }
       }
     ]
-
-
-    webApplicationFirewallConfiguration: {
-      enabled: true
-      firewallMode: 'Prevention'
-      ruleSetType: 'OWASP'
-      ruleSetVersion: '3.2'
-    }
   }
 }
