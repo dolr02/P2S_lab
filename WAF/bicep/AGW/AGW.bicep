@@ -29,16 +29,17 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
   }
 }
 
-resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
+resource appGw 'Microsoft.Network/applicationGateways@2023-05-01' = {
   name: appGwName
   location: location
 
-  properties: {
-    sku: {
-      name: 'Standard_v2'
-      tier: 'Standard_v2'
-    }
+  sku: {
+    name: 'Standard_v2'
+    tier: 'Standard_v2'
+    capacity: 2
+  }
 
+  properties: {
     gatewayIPConfigurations: [
       {
         name: 'gw-ip'
@@ -80,7 +81,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
             }
           ]
         }
-      }
+      },
       {
         name: 'pool-video'
         properties: {
@@ -124,7 +125,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
           }
           protocol: 'Http'
         }
-      }
+      },
       {
         name: 'listener-video'
         properties: {
@@ -175,7 +176,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
             )
           }
         }
-      }
+      },
       {
         name: 'rule-video'
         properties: {
