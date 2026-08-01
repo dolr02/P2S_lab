@@ -1,54 +1,69 @@
-param location string = resourceGroup().location
-param appGwName string = 'myAppGw'
+param location string
 param vnetName string
 param subnetName string
-param publicIpName string = 'myAppGwPip'
-param backendIp string = '10.0.0.4'
+param publicIpName string
+param appGwName string
+param backendTargets array
+param wafMode string
 
-// EXISTUJÍCÍ VNET
+
 resource vnet 'Microsoft.Network/virtualNetworks@2022-09-01' existing = {
   name: vnetName
 }
 
-// EXISTUJÍCÍ SUBNET
+
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-09-01' existing = {
   parent: vnet
   name: subnetName
 }
 
-// PUBLIC IP
+
 resource pip 'Microsoft.Network/publicIPAddresses@2022-09-01' = {
   name: publicIpName
   location: location
+
   sku: {
     name: 'Standard'
   }
+
   properties: {
     publicIPAllocationMethod: 'Static'
   }
 }
 
-// APPLICATION GATEWAY WAF_v2
-resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
+
+resource agw 'Microsoft.Network/applicationGateways@2022-09-01' = {
+
   name: appGwName
   location: location
+
+
   sku: {
     name: 'WAF_v2'
     tier: 'WAF_v2'
   }
+
+
   properties: {
+
+
     gatewayIPConfigurations: [
       {
-        name: 'gwIpConfig'
-        subnet: {
-          id: subnet.id
+        name: 'agw-ip-config'
+
+        properties: {
+          subnet: {
+            id: subnet.id
+          }
         }
       }
     ]
 
+
     frontendIPConfigurations: [
       {
-        name: 'frontendIp'
+        name: 'frontend-ip'
+
         properties: {
           publicIPAddress: {
             id: pip.id
@@ -57,69 +72,131 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
       }
     ]
 
+
     frontendPorts: [
       {
-        name: 'frontendPort'
+        name: 'port-80'
+
         properties: {
           port: 80
         }
       }
     ]
 
+
     backendAddressPools: [
       {
-        name: 'backendPool'
+        name: 'backend-pool'
+
         properties: {
           backendAddresses: [
-            {
-              ipAddress: backendIp
+            for backend in backendTargets: {
+              ipAddress: backend.ip
             }
           ]
         }
       }
     ]
 
+
     backendHttpSettingsCollection: [
       {
-        name: 'httpSettings'
+        name: 'http-settings'
+
         properties: {
           port: 80
           protocol: 'Http'
+          cookieBasedAffinity: 'Disabled'
+          requestTimeout: 30
         }
       }
     ]
 
+
     httpListeners: [
       {
-        name: 'httpListener'
+        name: 'listener-http'
+
         properties: {
+
           frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', appGwName, 'frontendIp')
+            id: resourceId(
+              'Microsoft.Network/applicationGateways/frontendIPConfigurations',
+              appGwName,
+              'frontend-ip'
+            )
           }
+
+
           frontendPort: {
-            id: resourceId('Microsoft.Network/applicationGateways/frontendPorts', appGwName, 'frontendPort')
+            id: resourceId(
+              'Microsoft.Network/applicationGateways/frontendPorts',
+              appGwName,
+              'port-80'
+            )
           }
+
+
           protocol: 'Http'
         }
       }
     ]
 
+
     requestRoutingRules: [
       {
-        name: 'rule1'
+        name: 'rule-http'
+
         properties: {
+
           ruleType: 'Basic'
+
+
           httpListener: {
-            id: resourceId('Microsoft.Network/applicationGateways/httpListeners', appGwName, 'httpListener')
+            id: resourceId(
+              'Microsoft.Network/applicationGateways/httpListeners',
+              appGwName,
+              'listener-http'
+            )
           }
+
+
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/applicationGateways/backendAddressPools', appGwName, 'backendPool')
+            id: resourceId(
+              'Microsoft.Network/applicationGateways/backendAddressPools',
+              appGwName,
+              'backend-pool'
+            )
           }
+
+
           backendHttpSettings: {
-            id: resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', appGwName, 'httpSettings')
+            id: resourceId(
+              'Microsoft.Network/applicationGateways/backendHttpSettingsCollection',
+              appGwName,
+              'http-settings'
+            )
           }
         }
       }
     ]
+
+
+    webApplicationFirewallConfiguration: {
+
+      enabled: true
+
+      firewallMode: wafMode
+
+      ruleSetType: 'OWASP'
+
+      ruleSetVersion: '3.2'
+    }
+
+
+    enableHttp2: true
   }
 }
+
+
+output appGatewayId string = agw.id
