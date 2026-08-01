@@ -1,7 +1,7 @@
 param location string = 'eastus'
 
-param vnetName string
-param subnetName string
+param vnetName string = 'vnet-dev-eus-01'
+param subnetName string = 'snet-dev-eus-01'
 
 param appGwName string = 'p2slab-appgw'
 param publicIpName string = 'p2slab-appgw-pip'
@@ -33,14 +33,16 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2022-09-01' = {
 
 
 resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
+
   name: appGwName
   location: location
+
 
   properties: {
 
     sku: {
-      name: 'Standard_v2'
-      tier: 'Standard_v2'
+      name: 'WAF_v2'
+      tier: 'WAF_v2'
       capacity: 2
     }
 
@@ -82,33 +84,12 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
     ]
 
 
-    backendAddressPools: [
-      {
-        name: 'backendPool'
-
-        properties: {}
-      }
-    ]
-
-
-    backendHttpSettingsCollection: [
-      {
-        name: 'httpSettings'
-
-        properties: {
-          port: 80
-          protocol: 'Http'
-          cookieBasedAffinity: 'Disabled'
-        }
-      }
-    ]
-
-
     httpListeners: [
       {
         name: 'listener80'
 
         properties: {
+
           frontendIPConfiguration: {
             id: resourceId(
               'Microsoft.Network/applicationGateways/frontendIPConfigurations',
@@ -116,6 +97,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
               'frontendPublicIP'
             )
           }
+
 
           frontendPort: {
             id: resourceId(
@@ -125,7 +107,32 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
             )
           }
 
+
           protocol: 'Http'
+        }
+      }
+    ]
+
+
+    backendAddressPools: [
+      {
+        name: 'emptyBackend'
+
+        properties: {}
+      }
+    ]
+
+
+    backendHttpSettingsCollection: [
+      {
+        name: 'backendSettings'
+
+        properties: {
+
+          port: 80
+          protocol: 'Http'
+          cookieBasedAffinity: 'Disabled'
+
         }
       }
     ]
@@ -136,7 +143,9 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
         name: 'rule80'
 
         properties: {
+
           ruleType: 'Basic'
+
           priority: 100
 
           httpListener: {
@@ -151,7 +160,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
             id: resourceId(
               'Microsoft.Network/applicationGateways/backendAddressPools',
               appGwName,
-              'backendPool'
+              'emptyBackend'
             )
           }
 
@@ -159,11 +168,24 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
             id: resourceId(
               'Microsoft.Network/applicationGateways/backendHttpSettingsCollection',
               appGwName,
-              'httpSettings'
+              'backendSettings'
             )
           }
         }
       }
     ]
+
+
+    webApplicationFirewallConfiguration: {
+
+      enabled: true
+
+      firewallMode: 'Detection'
+
+      ruleSetType: 'OWASP'
+
+      ruleSetVersion: '3.2'
+    }
+
   }
 }
