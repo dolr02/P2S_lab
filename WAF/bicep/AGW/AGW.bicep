@@ -31,16 +31,18 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-09-01' existing = {
 }
 
 
-// Dedicated Application Gateway subnet
+// Existing AGW subnet
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-09-01' existing = {
   parent: vnet
   name: subnetName
 }
 
 
-// Public IP
+// Public IP for Application Gateway
 resource publicIp 'Microsoft.Network/publicIPAddresses@2022-09-01' = if (empty(existingPublicIpId)) {
+
   name: '${appGwName}-pip'
+
   location: location
 
   sku: {
@@ -61,23 +63,24 @@ var frontendPublicIpId = empty(existingPublicIpId)
 
 
 
-// Application Gateway WAF v2
-resource appGw 'Microsoft.Network/applicationGateways@2022-05-01' = {
+// Application Gateway WAF_v2
+resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
 
   name: appGwName
+
   location: location
 
   tags: tags
 
 
-  sku: {
-    name: 'WAF_v2'
-    tier: 'WAF_v2'
-    capacity: skuCapacity
-  }
-
-
   properties: {
+
+
+    sku: {
+      name: 'WAF_v2'
+      tier: 'WAF_v2'
+      capacity: skuCapacity
+    }
 
 
     gatewayIPConfigurations: [
@@ -93,10 +96,9 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-05-01' = {
     ]
 
 
-
     frontendIPConfigurations: [
       {
-        name: 'appGwFrontendIP'
+        name: 'frontendPublicIP'
 
         properties: {
           publicIPAddress: {
@@ -107,17 +109,15 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-05-01' = {
     ]
 
 
-
     frontendPorts: [
       {
-        name: 'httpPort'
+        name: 'frontendPort80'
 
         properties: {
           port: 80
         }
       }
     ]
-
 
 
     backendAddressPools: [
@@ -125,64 +125,32 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-05-01' = {
         name: 'backendPool'
 
         properties: {
-
           backendAddresses: [
             for target in backendTargets: {
               ipAddress: target
             }
           ]
-
         }
       }
     ]
-
 
 
     backendHttpSettingsCollection: [
       {
-        name: 'httpSettings'
+        name: 'backendHttpSettings'
 
         properties: {
-
           port: 80
-
           protocol: 'Http'
-
           cookieBasedAffinity: 'Disabled'
-
           requestTimeout: 30
-
         }
       }
     ]
-
-
-
-    probes: [
-      {
-        name: 'healthProbe'
-
-        properties: {
-
-          protocol: 'Http'
-
-          path: '/'
-
-          interval: 30
-
-          timeout: 30
-
-          unhealthyThreshold: 3
-
-        }
-      }
-    ]
-
 
 
     httpListeners: [
       {
-
         name: 'httpListener'
 
         properties: {
@@ -190,8 +158,8 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-05-01' = {
           frontendIPConfiguration: {
             id: resourceId(
               'Microsoft.Network/applicationGateways/frontendIPConfigurations',
-              appGwName,
-              'appGwFrontendIP'
+              appGw.name,
+              'frontendPublicIP'
             )
           }
 
@@ -199,26 +167,21 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-05-01' = {
           frontendPort: {
             id: resourceId(
               'Microsoft.Network/applicationGateways/frontendPorts',
-              appGwName,
-              'httpPort'
+              appGw.name,
+              'frontendPort80'
             )
           }
 
 
           protocol: 'Http'
-
         }
-
       }
     ]
 
 
-
     requestRoutingRules: [
-
       {
-
-        name: 'rule1'
+        name: 'basicRule'
 
         properties: {
 
@@ -228,7 +191,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-05-01' = {
           httpListener: {
             id: resourceId(
               'Microsoft.Network/applicationGateways/httpListeners',
-              appGwName,
+              appGw.name,
               'httpListener'
             )
           }
@@ -237,7 +200,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-05-01' = {
           backendAddressPool: {
             id: resourceId(
               'Microsoft.Network/applicationGateways/backendAddressPools',
-              appGwName,
+              appGw.name,
               'backendPool'
             )
           }
@@ -246,20 +209,15 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-05-01' = {
           backendHttpSettings: {
             id: resourceId(
               'Microsoft.Network/applicationGateways/backendHttpSettingsCollection',
-              appGwName,
-              'httpSettings'
+              appGw.name,
+              'backendHttpSettings'
             )
           }
 
         }
-
       }
-
     ]
 
-
-
-    firewallPolicy: null
 
     webApplicationFirewallConfiguration: {
 
@@ -274,5 +232,4 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-05-01' = {
     }
 
   }
-
 }
