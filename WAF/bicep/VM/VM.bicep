@@ -1,5 +1,9 @@
 param location string = resourceGroup().location
+
+@secure()
 param adminPassword string
+
+param adminUsername string = 'radek'
 
 // IMAGE VM NIC
 resource nicImage 'Microsoft.Network/networkInterfaces@2022-09-01' = {
@@ -49,15 +53,15 @@ resource nicVideo 'Microsoft.Network/networkInterfaces@2022-09-01' = {
 
 // IMAGE VM
 resource vmImage 'Microsoft.Compute/virtualMachines@2022-11-01' = {
-  name: 'VM_image'
+  name: 'vm-image'
   location: location
   properties: {
     hardwareProfile: {
       vmSize: 'Standard_B1s'
     }
     osProfile: {
-      computerName: 'VM_image'
-      adminUsername: 'radek'
+      computerName: 'vmimage'
+      adminUsername: adminUsername
       adminPassword: adminPassword
     }
     networkProfile: {
@@ -80,15 +84,15 @@ resource vmImage 'Microsoft.Compute/virtualMachines@2022-11-01' = {
 
 // VIDEO VM
 resource vmVideo 'Microsoft.Compute/virtualMachines@2022-11-01' = {
-  name: 'VM_video'
+  name: 'vm-video'
   location: location
   properties: {
     hardwareProfile: {
       vmSize: 'Standard_B1s'
     }
     osProfile: {
-      computerName: 'VM_video'
-      adminUsername: 'radek'
+      computerName: 'vmvideo'
+      adminUsername: adminUsername
       adminPassword: adminPassword
     }
     networkProfile: {
