@@ -1,4 +1,4 @@
 az deployment group create `
-  --resource-group rg-p2s-lab `
-  --template-file ./AGW.bicep `
-  --parameters "@AGW.parameters.json"
+ --resource-group rg-p2s-lab `
+ --template-file ./WAF/bicep/AGW/AGW.bicep `
+ --parameters "@./WAF/bicep/AGW/AGW.parameters.json"
