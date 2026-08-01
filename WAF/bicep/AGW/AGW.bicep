@@ -1,24 +1,24 @@
-param location string = resourceGroup().location
+param location string = 'eastus'
 
-param vnetName string = 'vnet-dev-eus-01'
-param subnetName string = 'GatewaySubnet'
+param vnetName string
+param subnetName string
 
 param appGwName string = 'p2slab-appgw'
 param publicIpName string = 'p2slab-appgw-pip'
 
 
-resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
+resource vnet 'Microsoft.Network/virtualNetworks@2022-09-01' existing = {
   name: vnetName
 }
 
 
-resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing = {
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-09-01' existing = {
   parent: vnet
   name: subnetName
 }
 
 
-resource publicIp 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
+resource publicIp 'Microsoft.Network/publicIPAddresses@2022-09-01' = {
   name: publicIpName
   location: location
 
@@ -32,8 +32,7 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
 }
 
 
-resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
-
+resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
   name: appGwName
   location: location
 
@@ -45,7 +44,6 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
 
 
   properties: {
-
 
     gatewayIPConfigurations: [
       {
@@ -62,7 +60,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
 
     frontendIPConfigurations: [
       {
-        name: 'frontendIP'
+        name: 'frontendPublicIP'
 
         properties: {
           publicIPAddress: {
@@ -75,7 +73,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
 
     frontendPorts: [
       {
-        name: 'port80'
+        name: 'frontendPort80'
 
         properties: {
           port: 80
@@ -93,7 +91,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
 
     backendHttpSettingsCollection: [
       {
-        name: 'httpSettings'
+        name: 'backendHttpSettings'
 
         properties: {
           port: 80
@@ -106,17 +104,27 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
 
     httpListeners: [
       {
-        name: 'listener'
+        name: 'httpListener'
 
         properties: {
 
           frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', appGwName, 'frontendIP')
+            id: resourceId(
+              'Microsoft.Network/applicationGateways/frontendIPConfigurations',
+              appGwName,
+              'frontendPublicIP'
+            )
           }
 
+
           frontendPort: {
-            id: resourceId('Microsoft.Network/applicationGateways/frontendPorts', appGwName, 'port80')
+            id: resourceId(
+              'Microsoft.Network/applicationGateways/frontendPorts',
+              appGwName,
+              'frontendPort80'
+            )
           }
+
 
           protocol: 'Http'
         }
@@ -130,39 +138,44 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-09-01' = {
 
         properties: {
 
-          ruleType: 'Basic'
-
           priority: 100
+
+          ruleType: 'Basic'
 
 
           httpListener: {
-            id: resourceId('Microsoft.Network/applicationGateways/httpListeners', appGwName, 'listener')
+            id: resourceId(
+              'Microsoft.Network/applicationGateways/httpListeners',
+              appGwName,
+              'httpListener'
+            )
           }
 
 
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/applicationGateways/backendAddressPools', appGwName, 'backendPool')
+            id: resourceId(
+              'Microsoft.Network/applicationGateways/backendAddressPools',
+              appGwName,
+              'backendPool'
+            )
           }
 
 
           backendHttpSettings: {
-            id: resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', appGwName, 'httpSettings')
+            id: resourceId(
+              'Microsoft.Network/applicationGateways/backendHttpSettingsCollection',
+              appGwName,
+              'backendHttpSettings'
+            )
           }
         }
       }
     ]
 
 
-    webApplicationFirewallConfiguration: {
+    enableHttp2: true
 
-      enabled: true
 
-      firewallMode: 'Prevention'
-
-      ruleSetType: 'OWASP'
-
-      ruleSetVersion: '3.2'
-    }
-
+    firewallPolicy: null
   }
 }
