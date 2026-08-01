@@ -6,52 +6,46 @@ param subnetName string
 param appGwName string = 'p2slab-appgw'
 param publicIpName string = 'p2slab-appgw-pip'
 
-// EXISTUJÍCÍ NIC Z VM
-resource nicImage 'Microsoft.Network/networkInterfaces@2022-09-01' existing = {
-  name: 'nic-image'
-}
+param vmImageIp string
+param vmVideoIp string
 
-resource nicVideo 'Microsoft.Network/networkInterfaces@2022-09-01' existing = {
-  name: 'nic-video'
-}
-
-// EXISTUJÍCÍ VNET
-resource vnet 'Microsoft.Network/virtualNetworks@2022-09-01' existing = {
+resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
   name: vnetName
 }
 
-// EXISTUJÍCÍ SUBNET PRO AGW
-resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-09-01' existing = {
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' existing = {
   parent: vnet
   name: subnetName
 }
 
-// PUBLIC IP
-resource publicIp 'Microsoft.Network/publicIPAddresses@2022-09-01' = {
+resource publicIp 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
   name: publicIpName
   location: location
-  sku: { name: 'Standard' }
-  properties: { publicIPAllocationMethod: 'Static' }
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    publicIPAllocationMethod: 'Static'
+  }
 }
 
-// APPLICATION GATEWAY
 resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
   name: appGwName
   location: location
 
-  sku: {
-    name: 'Standard_v2'
-    tier: 'Standard_v2'
-    capacity: 2
-  }
-
   properties: {
+    sku: {
+      name: 'Standard_v2'
+      tier: 'Standard_v2'
+    }
 
     gatewayIPConfigurations: [
       {
         name: 'gw-ip'
         properties: {
-          subnet: { id: subnet.id }
+          subnet: {
+            id: subnet.id
+          }
         }
       }
     ]
@@ -60,7 +54,9 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
       {
         name: 'frontendPublicIP'
         properties: {
-          publicIPAddress: { id: publicIp.id }
+          publicIPAddress: {
+            id: publicIp.id
+          }
         }
       }
     ]
@@ -68,7 +64,9 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
     frontendPorts: [
       {
         name: 'port80'
-        properties: { port: 80 }
+        properties: {
+          port: 80
+        }
       }
     ]
 
@@ -76,16 +74,20 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
       {
         name: 'pool-image'
         properties: {
-          backendIPConfigurations: [
-            { id: nicImage.properties.ipConfigurations[0].id }
+          backendAddresses: [
+            {
+              ipAddress: vmImageIp
+            }
           ]
         }
       }
       {
         name: 'pool-video'
         properties: {
-          backendIPConfigurations: [
-            { id: nicVideo.properties.ipConfigurations[0].id }
+          backendAddresses: [
+            {
+              ipAddress: vmVideoIp
+            }
           ]
         }
       }
