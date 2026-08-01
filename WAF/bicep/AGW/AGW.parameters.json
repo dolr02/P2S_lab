@@ -2,35 +2,25 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+
     "location": {
       "value": "eastus"
     },
+
     "vnetName": {
       "value": "vnet-dev-eus-01"
     },
+
     "subnetName": {
-      "value": "GatewaySubnet"
+      "value": "agw-subnet"
     },
+
     "appGwName": {
       "value": "p2slab-appgw"
     },
+
     "publicIpName": {
       "value": "p2slab-appgw-pip"
-    },
-    "skuCapacity": {
-      "value": 2
-    },
-    "wafMode": {
-      "value": "Prevention"
-    },
-    "backendTargets": {
-      "value": []
-    },
-    "tags": {
-      "value": {
-        "environment": "dev",
-        "project": "P2S_lab"
-      }
     }
   }
 }
