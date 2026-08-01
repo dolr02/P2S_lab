@@ -1,4 +1,4 @@
-az deployment group create `
- --resource-group rg-p2s-lab `
- --template-file ./WAF/bicep/VM/VM.bicep `
- --parameters adminPassword='TvojeHeslo123!'
+az deployment group create \
+  --resource-group rg-p2s-lab \
+  --template-file ./vm.bicep \
+  --parameters adminPassword='TvojeHeslo123!'
