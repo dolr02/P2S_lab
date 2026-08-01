@@ -7,18 +7,10 @@ param appGwName string = 'p2slab-appgw'
 param publicIpName string = 'p2slab-appgw-pip'
 
 
-// =====================
-// EXISTING VNET
-// =====================
-
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
   name: vnetName
 }
 
-
-// =====================
-// EXISTING AGW SUBNET
-// =====================
 
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' existing = {
   parent: vnet
@@ -26,27 +18,8 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' existing 
 }
 
 
-// =====================
-// EXISTING VM NICs
-// =====================
-
-resource nicImage 'Microsoft.Network/networkInterfaces@2023-05-01' existing = {
-  name: 'nic-image'
-}
-
-resource nicVideo 'Microsoft.Network/networkInterfaces@2023-05-01' existing = {
-  name: 'nic-video'
-}
-
-
-// =====================
-// PUBLIC IP
-// =====================
-
 resource publicIp 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
-
   name: publicIpName
-
   location: location
 
   sku: {
@@ -59,145 +32,96 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
 }
 
 
-// =====================
-// APPLICATION GATEWAY
-// =====================
-
 resource appGw 'Microsoft.Network/applicationGateways@2023-05-01' = {
 
   name: appGwName
-
   location: location
 
 
   properties: {
 
-
     sku: {
-
       name: 'Standard_v2'
-
       tier: 'Standard_v2'
-
       capacity: 2
     }
 
 
-
     gatewayIPConfigurations: [
-
       {
-        name: 'gateway-ip-config'
+        name: 'gatewayIpConfig'
 
         properties: {
-
           subnet: {
-
             id: subnet.id
-
           }
-
         }
-
       }
-
     ]
-
 
 
     frontendIPConfigurations: [
-
       {
-        name: 'frontend-public-ip'
+        name: 'frontendPublicIP'
 
         properties: {
-
           publicIPAddress: {
-
             id: publicIp.id
-
           }
-
         }
-
       }
-
     ]
-
 
 
     frontendPorts: [
-
       {
-        name: 'frontend-port-80'
+        name: 'port80'
 
         properties: {
-
           port: 80
-
         }
-
       }
-
     ]
 
-
-
-    // =====================
-    // BACKEND POOLS
-    // =====================
 
     backendAddressPools: [
 
       {
-
         name: 'pool-image'
-
 
         properties: {
 
-          backendIPConfigurations: [
-
+          backendAddresses: [
             {
-              id: nicImage.properties.ipConfigurations[0].id
+              ipAddress: '10.0.3.4'
             }
-
           ]
 
         }
-
       }
 
 
       {
-
         name: 'pool-video'
-
 
         properties: {
 
-          backendIPConfigurations: [
-
+          backendAddresses: [
             {
-              id: nicVideo.properties.ipConfigurations[0].id
+              ipAddress: '10.0.2.4'
             }
-
           ]
 
         }
-
       }
 
     ]
-
 
 
     backendHttpSettingsCollection: [
 
       {
-
         name: 'backend-http'
-
 
         properties: {
 
@@ -210,68 +134,48 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-05-01' = {
           requestTimeout: 30
 
         }
-
       }
 
     ]
 
 
-
-    // =====================
-    // LISTENER
-    // =====================
-
     httpListeners: [
 
       {
-
         name: 'listener-http'
-
 
         properties: {
 
           frontendIPConfiguration: {
-
             id: resourceId(
               'Microsoft.Network/applicationGateways/frontendIPConfigurations',
               appGwName,
-              'frontend-public-ip'
+              'frontendPublicIP'
             )
-
           }
 
 
           frontendPort: {
-
             id: resourceId(
               'Microsoft.Network/applicationGateways/frontendPorts',
               appGwName,
-              'frontend-port-80'
+              'port80'
             )
-
           }
 
 
           protocol: 'Http'
 
         }
-
       }
 
     ]
 
 
-
-    // =====================
-    // ROUTING
-    // =====================
-
     requestRoutingRules: [
 
       {
-
         name: 'rule-image'
-
 
         properties: {
 
@@ -281,39 +185,32 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-05-01' = {
 
 
           httpListener: {
-
             id: resourceId(
               'Microsoft.Network/applicationGateways/httpListeners',
               appGwName,
               'listener-http'
             )
-
           }
 
 
           backendAddressPool: {
-
             id: resourceId(
               'Microsoft.Network/applicationGateways/backendAddressPools',
               appGwName,
               'pool-image'
             )
-
           }
 
 
           backendHttpSettings: {
-
             id: resourceId(
               'Microsoft.Network/applicationGateways/backendHttpSettingsCollection',
               appGwName,
               'backend-http'
             )
-
           }
 
         }
-
       }
 
     ]
