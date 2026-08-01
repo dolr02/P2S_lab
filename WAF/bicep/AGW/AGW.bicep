@@ -1,48 +1,42 @@
-// AGW.bicep
-
 param location string = resourceGroup().location
 
-param vnetResourceGroup string = resourceGroup().name
 param vnetName string = 'vnet-dev-eus-01'
 
-param subnetName string = 'snet-agw-dev-eus-01'
+param subnetName string = 'GatewaySubnet'
 
 param appGwName string = 'p2slab-appgw'
 
-param existingPublicIpId string = ''
+param publicIpName string = 'p2slab-appgw-pip'
 
 param skuCapacity int = 2
 
 @allowed([
-  'Prevention'
   'Detection'
+  'Prevention'
 ])
 param wafMode string = 'Prevention'
 
-param backendTargets array = []
-
 param tags object = {}
+
+param backendTargets array = []
 
 
 // Existing VNET
 resource vnet 'Microsoft.Network/virtualNetworks@2022-09-01' existing = {
   name: vnetName
-  scope: resourceGroup(vnetResourceGroup)
 }
 
 
-// Existing AGW subnet
+// GatewaySubnet
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-09-01' existing = {
   parent: vnet
   name: subnetName
 }
 
 
-// Public IP for Application Gateway
-resource publicIp 'Microsoft.Network/publicIPAddresses@2022-09-01' = if (empty(existingPublicIpId)) {
-
-  name: '${appGwName}-pip'
-
+// Public IP
+resource publicIp 'Microsoft.Network/publicIPAddresses@2022-09-01' = {
+  name: publicIpName
   location: location
 
   sku: {
@@ -57,24 +51,15 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2022-09-01' = if (empty(e
 }
 
 
-var frontendPublicIpId = empty(existingPublicIpId)
-  ? publicIp.id
-  : existingPublicIpId
-
-
-
-// Application Gateway WAF_v2
+// Application Gateway
 resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
 
   name: appGwName
-
   location: location
 
   tags: tags
 
-
   properties: {
-
 
     sku: {
       name: 'WAF_v2'
@@ -85,7 +70,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
 
     gatewayIPConfigurations: [
       {
-        name: 'appGwIpConfig'
+        name: 'gatewayIpConfig'
 
         properties: {
           subnet: {
@@ -98,11 +83,11 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
 
     frontendIPConfigurations: [
       {
-        name: 'frontendPublicIP'
+        name: 'frontendPublicIp'
 
         properties: {
           publicIPAddress: {
-            id: frontendPublicIpId
+            id: publicIp.id
           }
         }
       }
@@ -111,7 +96,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
 
     frontendPorts: [
       {
-        name: 'frontendPort80'
+        name: 'port80'
 
         properties: {
           port: 80
@@ -126,8 +111,8 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
 
         properties: {
           backendAddresses: [
-            for target in backendTargets: {
-              ipAddress: target
+            for ip in backendTargets: {
+              ipAddress: ip
             }
           ]
         }
@@ -137,7 +122,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
 
     backendHttpSettingsCollection: [
       {
-        name: 'backendHttpSettings'
+        name: 'backendSettings'
 
         properties: {
           port: 80
@@ -151,27 +136,17 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
 
     httpListeners: [
       {
-        name: 'httpListener'
+        name: 'listener80'
 
         properties: {
 
           frontendIPConfiguration: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/frontendIPConfigurations',
-              appGw.name,
-              'frontendPublicIP'
-            )
+            id: '${resourceId('Microsoft.Network/applicationGateways', appGwName)}/frontendIPConfigurations/frontendPublicIp'
           }
-
 
           frontendPort: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/frontendPorts',
-              appGw.name,
-              'frontendPort80'
-            )
+            id: '${resourceId('Microsoft.Network/applicationGateways', appGwName)}/frontendPorts/port80'
           }
-
 
           protocol: 'Http'
         }
@@ -181,37 +156,22 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
 
     requestRoutingRules: [
       {
-        name: 'basicRule'
+        name: 'rule80'
 
         properties: {
 
           ruleType: 'Basic'
 
-
           httpListener: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/httpListeners',
-              appGw.name,
-              'httpListener'
-            )
+            id: '${resourceId('Microsoft.Network/applicationGateways', appGwName)}/httpListeners/listener80'
           }
-
 
           backendAddressPool: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/backendAddressPools',
-              appGw.name,
-              'backendPool'
-            )
+            id: '${resourceId('Microsoft.Network/applicationGateways', appGwName)}/backendAddressPools/backendPool'
           }
 
-
           backendHttpSettings: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/backendHttpSettingsCollection',
-              appGw.name,
-              'backendHttpSettings'
-            )
+            id: '${resourceId('Microsoft.Network/applicationGateways', appGwName)}/backendHttpSettingsCollection/backendSettings'
           }
 
         }
@@ -228,7 +188,6 @@ resource appGw 'Microsoft.Network/applicationGateways@2022-09-01' = {
       ruleSetType: 'OWASP'
 
       ruleSetVersion: '3.2'
-
     }
 
   }
