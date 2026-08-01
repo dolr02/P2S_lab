@@ -1,0 +1,7 @@
+$rg = "P2S_lab_network_rg"
+$vnetName = "vnet-tst-eus-01"
+$subnetName = "snet-tst-eus-01"
+$prefix = "10.1.250.0/27"
+
+$vnet = Get-AzVirtualNetwork -Name $vnetName -ResourceGroupName $rg
+Add-AzVirtualNetworkSubnetConfig -Name $subnetName -AddressPrefix $prefix -VirtualNetwork $vnet | Set-AzVirtualNetwork
