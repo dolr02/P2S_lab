@@ -1,1 +1,5 @@
-az deployment group create --resource-group rg-p2s-lab --template-file .\AGW.bicep --parameters @parameters.json
+az deployment group create `
+  --resource-group rg-p2s-lab `
+  --template-file ./AGW.bicep `
+  --parameters "$(Get-Content ./parameters.json -Raw)"
+
