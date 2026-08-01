@@ -1,7 +1,6 @@
 az deployment group create `
-  --resource-group rg-p2s-lab `
-  --template-file ./AGW.bicep `
-  --parameters `
-    vnetName=vnet-dev-eus-01 `
-    subnetName=snet-dev-eus-01 `
-    vmImageIp=10.0.30.4
+ --resource-group rg-p2s-lab `
+ --template-file ./WAF/bicep/AGW/AGW.bicep `
+ --parameters `
+ vnetName=vnet-dev-eus-01 `
+ subnetName=snet-dev-eus-01
