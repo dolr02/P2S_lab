@@ -7,7 +7,6 @@ param appGwName string = 'p2slab-appgw'
 param publicIpName string = 'p2slab-appgw-pip'
 
 param vmImageIp string
-param vmVideoIp string
 
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
   name: vnetName
@@ -18,31 +17,34 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' existing 
   name: subnetName
 }
 
-resource publicIp 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
+resource pip 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
   name: publicIpName
   location: location
+
   sku: {
     name: 'Standard'
   }
+
   properties: {
     publicIPAllocationMethod: 'Static'
   }
 }
 
-resource appGw 'Microsoft.Network/applicationGateways@2023-05-01' = {
+resource agw 'Microsoft.Network/applicationGateways@2023-05-01' = {
   name: appGwName
   location: location
 
-  sku: {
-    name: 'Standard_v2'
-    tier: 'Standard_v2'
-    capacity: 2
-  }
-
   properties: {
+
+    sku: {
+      name: 'Standard_v2'
+      tier: 'Standard_v2'
+      capacity: 2
+    }
+
     gatewayIPConfigurations: [
       {
-        name: 'gw-ip'
+        name: 'gateway'
         properties: {
           subnet: {
             id: subnet.id
@@ -53,10 +55,10 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-05-01' = {
 
     frontendIPConfigurations: [
       {
-        name: 'frontendPublicIP'
+        name: 'frontend'
         properties: {
           publicIPAddress: {
-            id: publicIp.id
+            id: pip.id
           }
         }
       }
@@ -64,7 +66,7 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-05-01' = {
 
     frontendPorts: [
       {
-        name: 'port80'
+        name: 'http'
         properties: {
           port: 80
         }
@@ -73,21 +75,11 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-05-01' = {
 
     backendAddressPools: [
       {
-        name: 'pool-image'
+        name: 'pool'
         properties: {
           backendAddresses: [
             {
               ipAddress: vmImageIp
-            }
-          ]
-        }
-      },
-      {
-        name: 'pool-video'
-        properties: {
-          backendAddresses: [
-            {
-              ipAddress: vmVideoIp
             }
           ]
         }
@@ -96,10 +88,11 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-05-01' = {
 
     backendHttpSettingsCollection: [
       {
-        name: 'backendSettings'
+        name: 'http'
         properties: {
           port: 80
           protocol: 'Http'
+          cookieBasedAffinity: 'Disabled'
           requestTimeout: 30
         }
       }
@@ -107,41 +100,13 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-05-01' = {
 
     httpListeners: [
       {
-        name: 'listener-image'
+        name: 'listener'
         properties: {
           frontendIPConfiguration: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/frontendIPConfigurations',
-              appGwName,
-              'frontendPublicIP'
-            )
+            id: resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', appGwName, 'frontend')
           }
           frontendPort: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/frontendPorts',
-              appGwName,
-              'port80'
-            )
-          }
-          protocol: 'Http'
-        }
-      },
-      {
-        name: 'listener-video'
-        properties: {
-          frontendIPConfiguration: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/frontendIPConfigurations',
-              appGwName,
-              'frontendPublicIP'
-            )
-          }
-          frontendPort: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/frontendPorts',
-              appGwName,
-              'port80'
-            )
+            id: resourceId('Microsoft.Network/applicationGateways/frontendPorts', appGwName, 'http')
           }
           protocol: 'Http'
         }
@@ -150,58 +115,21 @@ resource appGw 'Microsoft.Network/applicationGateways@2023-05-01' = {
 
     requestRoutingRules: [
       {
-        name: 'rule-image'
+        name: 'rule'
         properties: {
           ruleType: 'Basic'
           priority: 100
+
           httpListener: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/httpListeners',
-              appGwName,
-              'listener-image'
-            )
+            id: resourceId('Microsoft.Network/applicationGateways/httpListeners', appGwName, 'listener')
           }
+
           backendAddressPool: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/backendAddressPools',
-              appGwName,
-              'pool-image'
-            )
+            id: resourceId('Microsoft.Network/applicationGateways/backendAddressPools', appGwName, 'pool')
           }
+
           backendHttpSettings: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/backendHttpSettingsCollection',
-              appGwName,
-              'backendSettings'
-            )
-          }
-        }
-      },
-      {
-        name: 'rule-video'
-        properties: {
-          ruleType: 'Basic'
-          priority: 200
-          httpListener: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/httpListeners',
-              appGwName,
-              'listener-video'
-            )
-          }
-          backendAddressPool: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/backendAddressPools',
-              appGwName,
-              'pool-video'
-            )
-          }
-          backendHttpSettings: {
-            id: resourceId(
-              'Microsoft.Network/applicationGateways/backendHttpSettingsCollection',
-              appGwName,
-              'backendSettings'
-            )
+            id: resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', appGwName, 'http')
           }
         }
       }
