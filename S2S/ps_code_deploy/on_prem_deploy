@@ -1,0 +1,4 @@
+az deployment group create `
+  --resource-group rg-onprem-dev-eus `
+  --template-file on_prem_parameters.bicep `
+  --parameters adminPassword="Azure@123"
