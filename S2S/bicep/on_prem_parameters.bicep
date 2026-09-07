@@ -1,31 +1,21 @@
-#disable-next-line no-unused-params
 param vnetName string = 'vnet-onprem-dev-eus-01'
 
-#disable-next-line no-unused-params
-param subnets array = [
-  {
-    name: 'snet-onprem-servers'
-    prefix: '192.168.1.0/24'
-  }
-]
+param subnetName string = 'snet-onprem-servers'
 
-#disable-next-line no-unused-params
+param subnetPrefix string = '192.168.1.0/24'
+
 param vmName string = 'vm-prem-vpn-01'
 
 @secure()
-#disable-next-line no-unused-params
 param adminPassword string
-
-#disable-next-line no-unused-params
-param usePublicIp bool = true
 
 module onprem './on_prem_main.bicep' = {
   name: 'onprem'
   params: {
     vnetName: vnetName
-    subnets: subnets
+    subnetName: subnetName
+    subnetPrefix: subnetPrefix
     vmName: vmName
     adminPassword: adminPassword
-    usePublicIp: usePublicIp
   }
 }

@@ -1,11 +1,13 @@
 param vnetName string
-param subnets array
+
+param subnetName string
+
+param subnetPrefix string
+
 param vmName string
 
 @secure()
 param adminPassword string
-
-param usePublicIp bool
 
 resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
   name: vnetName
@@ -16,22 +18,25 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
         '192.168.0.0/16'
       ]
     }
-    subnets: [
-      for sn in subnets: {
-        name: sn.name
-        properties: {
-          addressPrefix: sn.prefix
-        }
-      }
-    ]
   }
 }
 
-resource pip 'Microsoft.Network/publicIPAddresses@2023-09-01' = if (usePublicIp) {
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' = {
+  parent: vnet
+  name: subnetName
+  properties: {
+    addressPrefix: subnetPrefix
+  }
+}
+
+resource pip 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
   name: '${vmName}-pip'
   location: resourceGroup().location
+  sku: {
+    name: 'Standard'
+  }
   properties: {
-    publicIPAllocationMethod: 'Dynamic'
+    publicIPAllocationMethod: 'Static'
   }
 }
 
@@ -45,15 +50,11 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: resourceId(
-              'Microsoft.Network/virtualNetworks/subnets',
-              vnetName,
-              subnets[0].name
-            )
+            id: subnet.id
           }
-          publicIPAddress: usePublicIp ? {
+          publicIPAddress: {
             id: pip.id
-          } : null
+          }
         }
       }
     ]
@@ -87,6 +88,9 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
       networkInterfaces: [
         {
           id: nic.id
+          properties: {
+            primary: true
+          }
         }
       ]
     }
