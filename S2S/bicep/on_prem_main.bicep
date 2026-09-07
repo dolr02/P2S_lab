@@ -1,18 +1,11 @@
 param vnetName string
 param subnets array
 param vmName string
+
 @secure()
 param adminPassword string
-param usePublicIp bool
 
-var azureSubnets = [
-  for sn in subnets: {
-    name: sn.name
-    properties: {
-      addressPrefix: sn.prefix
-    }
-  }
-]
+param usePublicIp bool
 
 resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
   name: vnetName
@@ -23,7 +16,14 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
         '192.168.0.0/16'
       ]
     }
-    subnets: azureSubnets
+    subnets: [
+      for sn in subnets: {
+        name: sn.name
+        properties: {
+          addressPrefix: sn.prefix
+        }
+      }
+    ]
   }
 }
 
@@ -45,7 +45,11 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, subnets[0].name)
+            id: resourceId(
+              'Microsoft.Network/virtualNetworks/subnets',
+              vnetName,
+              subnets[0].name
+            )
           }
           publicIPAddress: usePublicIp ? {
             id: pip.id
