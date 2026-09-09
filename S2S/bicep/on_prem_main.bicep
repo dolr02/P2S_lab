@@ -6,6 +6,8 @@ param subnetPrefix string
 
 param vmName string
 
+param adminUsername string
+
 @secure()
 param adminPassword string
 
@@ -70,14 +72,14 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
     }
     osProfile: {
       computerName: vmName
-      adminUsername: 'az700admin'
+      adminUsername: adminUsername
       adminPassword: adminPassword
     }
     storageProfile: {
       imageReference: {
         publisher: 'MicrosoftWindowsServer'
         offer: 'windowsserver'
-        sku: '2022-datacenter'
+        sku: '2025-datacenter'
         version: 'latest'
       }
       osDisk: {

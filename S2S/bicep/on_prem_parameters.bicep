@@ -6,6 +6,8 @@ param subnetPrefix string = '192.168.1.0/24'
 
 param vmName string = 'vm-prem-vpn-01'
 
+param adminUsername string = 'azureuser'
+
 @secure()
 param adminPassword string
 
@@ -16,6 +18,7 @@ module onprem './on_prem_main.bicep' = {
     subnetName: subnetName
     subnetPrefix: subnetPrefix
     vmName: vmName
+    adminUsername: adminUsername
     adminPassword: adminPassword
   }
 }
