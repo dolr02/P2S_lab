@@ -1,5 +1,6 @@
-az deployment group what-if `
+az deployment group create `
   --resource-group rg-p2s-lab `
   --template-file ./on_prem_parameters.bicep `
   --parameters adminPassword="Azure@123"
+
 
