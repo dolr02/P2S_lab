@@ -1,3 +1,5 @@
-az deployment group create \
-  --resource-group rg-p2s-lab \
-  --template-file ./azure_deploy.bicep
+az deployment group create `
+  --resource-group rg-p2s-lab `
+  --template-file ./azure_parameters.bicep `
+  --parameters adminPassword="Azure@123"
+
