@@ -1,0 +1,20 @@
+configure-azure-vm.ps1 
+New-NetFirewallRule -DisplayName 'Allow ICMPv4 inbound for S2S lab' -Protocol ICMPv4 -Direction Inbound -Action Allow -ErrorAction SilentlyContinue
+
+configure-client.ps1
+route.exe -p add 10.0.0.0 mask 255.255.0.0 192.168.1.4
+New-NetFirewallRule -DisplayName 'Allow ICMPv4 inbound for S2S lab' -Protocol ICMPv4 -Direction Inbound -Action Allow -ErrorAction SilentlyContinue
+
+configure-rras.ps1
+param(
+  [Parameter(Mandatory=$true)][string]$AzureGatewayPublicIp
+)
+$ErrorActionPreference = 'Stop'
+Install-WindowsFeature RemoteAccess -IncludeManagementTools
+Install-WindowsFeature Routing -IncludeManagementTools
+Set-Service RemoteAccess -StartupType Automatic
+Get-NetIPInterface -AddressFamily IPv4 | Where-Object {$_.InterfaceAlias -like 'Ethernet*'} | Set-NetIPInterface -Forwarding Enabled
+New-NetFirewallRule -DisplayName 'Allow IKE UDP 500' -Direction Inbound -Protocol UDP -LocalPort 500 -Action Allow -ErrorAction SilentlyContinue
+New-NetFirewallRule -DisplayName 'Allow IPsec NAT-T UDP 4500' -Direction Inbound -Protocol UDP -LocalPort 4500 -Action Allow -ErrorAction SilentlyContinue
+Write-Host 'Base RRAS role and forwarding are ready.'
+Write-Host "In RRAS create an IKEv2 demand-dial interface to $AzureGatewayPublicIp, use the same PSK as Azure, and add 10.0.0.0/16 to that interface."
