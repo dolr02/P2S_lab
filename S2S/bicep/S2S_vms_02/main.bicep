@@ -110,7 +110,6 @@ resource rrasNic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
     ipConfigurations: [
       {
         name: 'ipconfig1'
-
         properties: {
           privateIPAllocationMethod: 'Static'
           privateIPAddress: '192.168.1.4'
@@ -136,7 +135,6 @@ resource clientNic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
     ipConfigurations: [
       {
         name: 'ipconfig1'
-
         properties: {
           privateIPAllocationMethod: 'Static'
           privateIPAddress: '192.168.1.5'
@@ -158,7 +156,6 @@ resource azureNic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
     ipConfigurations: [
       {
         name: 'ipconfig1'
-
         properties: {
           privateIPAllocationMethod: 'Static'
           privateIPAddress: '10.0.0.4'
@@ -196,6 +193,7 @@ resource rrasVm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
 
     storageProfile: {
       imageReference: imageReference
+
       osDisk: {
         createOption: 'FromImage'
       }
@@ -228,6 +226,7 @@ resource clientVm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
 
     storageProfile: {
       imageReference: imageReference
+
       osDisk: {
         createOption: 'FromImage'
       }
@@ -260,6 +259,7 @@ resource azureVm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
 
     storageProfile: {
       imageReference: imageReference
+
       osDisk: {
         createOption: 'FromImage'
       }
