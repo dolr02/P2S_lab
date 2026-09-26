@@ -1,13 +1,20 @@
-param location string = resourceGroup().location
-param azureVnetName string = 'vnet-dev-eus-01'
-param onpremVnetName string = 'vnet-onprem-eus-01'
+targetScope = 'resourceGroup'
 
-param adminUsername string = 'azureadmin'
+@description('Deployment location')
+param location string = resourceGroup().location
+
+param azureVnetName string
+param onpremVnetName string
+
+param azureSubnetName string
+param onpremSubnetName string
+
+param adminUsername string
 
 @secure()
 param adminPassword string
 
-param vmSize string = 'Standard_B2s'
+param vmSize string
 
 resource azureVnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
   name: azureVnetName
@@ -19,27 +26,20 @@ resource onpremVnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
 
 resource azureSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing = {
   parent: azureVnet
-  name: 'snet-azure-vm'
+  name: azureSubnetName
 }
 
 resource onpremSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing = {
   parent: onpremVnet
-  name: 'snet-onprem'
+  name: onpremSubnetName
 }
 
 resource rrasPip 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
   name: 'pip-vm-onprem-rras-01'
   location: location
 
-  zones: [
-    '1'
-    '2'
-    '3'
-  ]
-
   sku: {
     name: 'Standard'
-    tier: 'Regional'
   }
 
   properties: {
@@ -67,7 +67,7 @@ resource rrasNsg 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
         }
       }
       {
-        name: 'Allow-IPsec-NAT-T'
+        name: 'Allow-NATT'
         properties: {
           priority: 110
           access: 'Allow'
@@ -110,6 +110,7 @@ resource rrasNic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
     ipConfigurations: [
       {
         name: 'ipconfig1'
+
         properties: {
           privateIPAllocationMethod: 'Static'
           privateIPAddress: '192.168.1.4'
@@ -134,4 +135,144 @@ resource clientNic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
   properties: {
     ipConfigurations: [
       {
- 
+        name: 'ipconfig1'
+
+        properties: {
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: '192.168.1.5'
+
+          subnet: {
+            id: onpremSubnet.id
+          }
+        }
+      }
+    ]
+  }
+}
+
+resource azureNic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
+  name: 'nic-vm-azure-01'
+  location: location
+
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+
+        properties: {
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: '10.0.0.4'
+
+          subnet: {
+            id: azureSubnet.id
+          }
+        }
+      }
+    ]
+  }
+}
+
+var imageReference = {
+  publisher: 'MicrosoftWindowsServer'
+  offer: 'WindowsServer'
+  sku: '2022-datacenter-azure-edition'
+  version: 'latest'
+}
+
+resource rrasVm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
+  name: 'vm-onprem-rras-01'
+  location: location
+
+  properties: {
+    hardwareProfile: {
+      vmSize: vmSize
+    }
+
+    osProfile: {
+      computerName: 'rras01'
+      adminUsername: adminUsername
+      adminPassword: adminPassword
+    }
+
+    storageProfile: {
+      imageReference: imageReference
+      osDisk: {
+        createOption: 'FromImage'
+      }
+    }
+
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: rrasNic.id
+        }
+      ]
+    }
+  }
+}
+
+resource clientVm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
+  name: 'vm-onprem-client-01'
+  location: location
+
+  properties: {
+    hardwareProfile: {
+      vmSize: vmSize
+    }
+
+    osProfile: {
+      computerName: 'client01'
+      adminUsername: adminUsername
+      adminPassword: adminPassword
+    }
+
+    storageProfile: {
+      imageReference: imageReference
+      osDisk: {
+        createOption: 'FromImage'
+      }
+    }
+
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: clientNic.id
+        }
+      ]
+    }
+  }
+}
+
+resource azureVm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
+  name: 'vm-azure-01'
+  location: location
+
+  properties: {
+    hardwareProfile: {
+      vmSize: vmSize
+    }
+
+    osProfile: {
+      computerName: 'azure01'
+      adminUsername: adminUsername
+      adminPassword: adminPassword
+    }
+
+    storageProfile: {
+      imageReference: imageReference
+      osDisk: {
+        createOption: 'FromImage'
+      }
+    }
+
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: azureNic.id
+        }
+      ]
+    }
+  }
+}
+
+output rrasPublicIp string = rrasPip.properties.ipAddress
