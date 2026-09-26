@@ -1,0 +1,6 @@
+az network vnet subnet create `
+  --resource-group rg-p2s-lab `
+  --vnet-name vnet-dev-eus-01 `
+  --name PE-subnet `
+  --address-prefixes 10.0.2.0/24 `
+  --private-endpoint-network-policies Disabled

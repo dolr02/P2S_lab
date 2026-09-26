@@ -1,0 +1,5 @@
+az deployment group create `
+  -g rg-consumer-dev-eus `
+  -n consumer `
+  -f PE.bicep `
+  --parameters plsId="$plsId"

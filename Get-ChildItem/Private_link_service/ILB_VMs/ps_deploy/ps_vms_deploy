@@ -1,0 +1,4 @@
+az deployment group create `
+  --resource-group rg-consumer-dev-eus `
+  --template-file VMs.bicep `
+  --name consumer-vms
