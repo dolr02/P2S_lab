@@ -34,12 +34,17 @@ resource connection 'Microsoft.Network/connections@2023-09-01' = {
   location: location
   properties: {
     connectionType: 'IPsec'
+
     virtualNetworkGateway1: {
       id: gw.id
+      properties: {}
     }
+
     localNetworkGateway2: {
       id: lng.id
+      properties: {}
     }
+
     sharedKey: sharedKey
     enableBgp: false
     connectionProtocol: 'IKEv2'
