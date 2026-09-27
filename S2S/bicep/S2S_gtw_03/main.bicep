@@ -32,15 +32,17 @@ resource pip 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
 resource gw 'Microsoft.Network/virtualNetworkGateways@2023-09-01' = {
   name: gatewayName
   location: location
-  sku: {
-    name: 'VpnGw1AZ'
-    tier: 'VpnGw1AZ'
-  }
   properties: {
+    activeActive: false
+    enableBgp: false
     gatewayType: 'Vpn'
     vpnType: 'RouteBased'
-    enableBgp: false
-    activeActive: false
+
+    sku: {
+      name: 'VpnGw1AZ'
+      tier: 'VpnGw1AZ'
+    }
+
     ipConfigurations: [
       {
         name: 'gw-ipconfig'
