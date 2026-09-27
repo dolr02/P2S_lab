@@ -12,8 +12,21 @@ resource gatewaySubnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' ex
   name: 'GatewaySubnet'
 }
 
-resource pip 'Microsoft.Network/publicIPAddresses@2023-09-01' existing = {
+resource pip 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
   name: publicIpName
+  location: location
+  sku: {
+    name: 'Standard'
+    tier: 'Regional'
+  }
+  zones: [
+    '1'
+    '2'
+    '3'
+  ]
+  properties: {
+    publicIPAllocationMethod: 'Static'
+  }
 }
 
 resource gw 'Microsoft.Network/virtualNetworkGateways@2023-09-01' = {
@@ -46,4 +59,4 @@ resource gw 'Microsoft.Network/virtualNetworkGateways@2023-09-01' = {
 }
 
 output gatewayId string = gw.id
-output gatewayPublicIp string = pip.properties.ipAddress
+output gatewayPublicIpId string = pip.id
