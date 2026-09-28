@@ -34,14 +34,49 @@ resource onpremSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' exi
   name: onpremSubnetName
 }
 
+// -----------------------------------------------------------------------------
+// FIX: Route traffic from the simulated on-prem subnet to Azure through RRAS
+// -----------------------------------------------------------------------------
+
+resource onpremRouteTable 'Microsoft.Network/routeTables@2023-09-01' = {
+  name: 'rt-onprem-to-azure-vpn'
+  location: location
+  properties: {
+    disableBgpRoutePropagation: false
+    routes: [
+      {
+        name: 'to-azure-via-rras'
+        properties: {
+          addressPrefix: '10.0.0.0/16'
+          nextHopType: 'VirtualAppliance'
+          nextHopIpAddress: '192.168.1.4'
+        }
+      }
+    ]
+  }
+}
+
+resource onpremSubnetRouteTable 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' = {
+  parent: onpremVnet
+  name: onpremSubnetName
+  properties: {
+    addressPrefix: onpremSubnet.properties.addressPrefix
+    routeTable: {
+      id: onpremRouteTable.id
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// RRAS networking
+// -----------------------------------------------------------------------------
+
 resource rrasPip 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
   name: 'pip-vm-onprem-rras-01'
   location: location
-
   sku: {
     name: 'Standard'
   }
-
   properties: {
     publicIPAllocationMethod: 'Static'
   }
@@ -50,7 +85,6 @@ resource rrasPip 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
 resource rrasNsg 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
   name: 'nsg-vm-onprem-rras-01'
   location: location
-
   properties: {
     securityRules: [
       {
@@ -99,25 +133,20 @@ resource rrasNsg 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
 resource rrasNic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
   name: 'nic-vm-onprem-rras-01'
   location: location
-
   properties: {
     enableIPForwarding: true
-
     networkSecurityGroup: {
       id: rrasNsg.id
     }
-
     ipConfigurations: [
       {
         name: 'ipconfig1'
         properties: {
           privateIPAllocationMethod: 'Static'
           privateIPAddress: '192.168.1.4'
-
           subnet: {
             id: onpremSubnet.id
           }
-
           publicIPAddress: {
             id: rrasPip.id
           }
@@ -127,10 +156,13 @@ resource rrasNic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
   }
 }
 
+// -----------------------------------------------------------------------------
+// On-prem client
+// -----------------------------------------------------------------------------
+
 resource clientNic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
   name: 'nic-vm-onprem-client-01'
   location: location
-
   properties: {
     ipConfigurations: [
       {
@@ -138,7 +170,6 @@ resource clientNic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
         properties: {
           privateIPAllocationMethod: 'Static'
           privateIPAddress: '192.168.1.5'
-
           subnet: {
             id: onpremSubnet.id
           }
@@ -148,10 +179,13 @@ resource clientNic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
   }
 }
 
+// -----------------------------------------------------------------------------
+// Azure VM
+// -----------------------------------------------------------------------------
+
 resource azureNic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
   name: 'nic-vm-azure-01'
   location: location
-
   properties: {
     ipConfigurations: [
       {
@@ -159,7 +193,6 @@ resource azureNic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
         properties: {
           privateIPAllocationMethod: 'Static'
           privateIPAddress: '10.0.0.4'
-
           subnet: {
             id: azureSubnet.id
           }
@@ -176,29 +209,28 @@ var imageReference = {
   version: 'latest'
 }
 
+// -----------------------------------------------------------------------------
+// RRAS VM
+// -----------------------------------------------------------------------------
+
 resource rrasVm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
   name: 'vm-onprem-rras-01'
   location: location
-
   properties: {
     hardwareProfile: {
       vmSize: vmSize
     }
-
     osProfile: {
       computerName: 'rras01'
       adminUsername: adminUsername
       adminPassword: adminPassword
     }
-
     storageProfile: {
       imageReference: imageReference
-
       osDisk: {
         createOption: 'FromImage'
       }
     }
-
     networkProfile: {
       networkInterfaces: [
         {
@@ -209,29 +241,28 @@ resource rrasVm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
   }
 }
 
+// -----------------------------------------------------------------------------
+// On-prem client VM
+// -----------------------------------------------------------------------------
+
 resource clientVm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
   name: 'vm-onprem-client-01'
   location: location
-
   properties: {
     hardwareProfile: {
       vmSize: vmSize
     }
-
     osProfile: {
       computerName: 'client01'
       adminUsername: adminUsername
       adminPassword: adminPassword
     }
-
     storageProfile: {
       imageReference: imageReference
-
       osDisk: {
         createOption: 'FromImage'
       }
     }
-
     networkProfile: {
       networkInterfaces: [
         {
@@ -242,29 +273,28 @@ resource clientVm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
   }
 }
 
+// -----------------------------------------------------------------------------
+// Azure VM
+// -----------------------------------------------------------------------------
+
 resource azureVm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
   name: 'vm-azure-01'
   location: location
-
   properties: {
     hardwareProfile: {
       vmSize: vmSize
     }
-
     osProfile: {
       computerName: 'azure01'
       adminUsername: adminUsername
       adminPassword: adminPassword
     }
-
     storageProfile: {
       imageReference: imageReference
-
       osDisk: {
         createOption: 'FromImage'
       }
     }
-
     networkProfile: {
       networkInterfaces: [
         {

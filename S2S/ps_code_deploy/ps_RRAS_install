@@ -1,0 +1,3 @@
+Install-WindowsFeature `
+  -Name RemoteAccess,DirectAccess-VPN,Routing `
+  -IncludeManagementTools
