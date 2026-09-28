@@ -1,1 +1,7 @@
-+
+```powershell
+az vm run-command invoke `
+  -g rg-p2s-lab `
+  -n vm-onprem-rras-01 `
+  --command-id RunPowerShellScript `
+  --scripts "Add-VpnS2SInterface -Name 'Azure-S2S' -Destination '4.255.94.49' -Protocol IKEv2 -AuthenticationMethod PSKOnly -SharedSecret 'abc123' -IPv4Subnet '10.0.0.0/16:100' -AdminStatus `$true -Persistent -PassThru"
+```
