@@ -1,1 +1,0 @@
-az deployment group create --resource-group rg-p2s-lab --template-file ./bicep/S2S_network_01/main.bicep --parameters ./bicep/S2S_network_01/main.bicepparam

@@ -1,6 +1,0 @@
-az deployment group create `
-  --resource-group rg-p2s-lab `
-  --template-file ./vwan.bicep `
-  --parameters hubVnetId="/subscriptions/a48d08c6-0e09-428b-a68f-ae160e9abf86/resourceGroups/rg-p2s-lab/providers/Microsoft.Network/virtualNetworks/vnet-hub-eus-01"
-
-

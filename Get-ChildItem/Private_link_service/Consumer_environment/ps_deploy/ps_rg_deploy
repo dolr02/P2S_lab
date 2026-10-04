@@ -1,3 +1,0 @@
-az group create `
--g rg-consumer-dev-eus `
--l eastus

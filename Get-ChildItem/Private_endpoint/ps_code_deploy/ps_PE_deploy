@@ -1,8 +1,0 @@
-az deployment group create `
-  --resource-group rg-p2s-lab `
-  --template-file PE.bicep `
-  --parameters `
-      saName=stp2slab1376 `
-      vnetName=vnet-dev-eus-01 `
-      subnetName=PE-subnet `
-      location=eastus
