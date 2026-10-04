@@ -1,4 +1,5 @@
 az deployment group create `
   --resource-group rg-p2s-lab `
+  --name vm-storage-se-deploy `
   --template-file ./bicep/vm.bicep `
-  --parameters adminPassword='TVE_HESLO'
+  --parameters adminPassword='AzureLab2026!'
