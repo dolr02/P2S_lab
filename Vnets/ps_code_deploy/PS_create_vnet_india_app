@@ -1,0 +1,4 @@
+az deployment group create `
+  --name deploy-vnet-india-app `
+  --resource-group rg-p2s-lab `
+  --template-file ./bicep/vnet_india_app.bicep
