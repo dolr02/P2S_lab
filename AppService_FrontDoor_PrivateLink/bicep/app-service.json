@@ -1,0 +1,56 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.47.16.16243",
+      "templateHash": "16073741856803516835"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "Central India"
+    },
+    "webAppName": {
+      "type": "string"
+    },
+    "appServicePlanName": {
+      "type": "string",
+      "defaultValue": "asp-afd-private-link"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2023-12-01",
+      "name": "[parameters('webAppName')]",
+      "location": "[parameters('location')]",
+      "kind": "app,linux",
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
+        "httpsOnly": true,
+        "siteConfig": {
+          "minTlsVersion": "1.2",
+          "ftpsState": "Disabled",
+          "http20Enabled": true
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "webAppName": {
+      "type": "string",
+      "value": "[parameters('webAppName')]"
+    },
+    "webAppId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]"
+    },
+    "webAppDefaultHostName": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Web/sites', parameters('webAppName')), '2023-12-01').defaultHostName]"
+    }
+  }
+}
