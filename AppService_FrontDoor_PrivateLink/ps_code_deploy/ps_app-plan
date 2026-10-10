@@ -1,0 +1,6 @@
+az appservice plan create \
+  --name asp-afd-private-link \
+  --resource-group rg-p2s-lab \
+  --location centralindia \
+  --is-linux \
+  --sku B1
