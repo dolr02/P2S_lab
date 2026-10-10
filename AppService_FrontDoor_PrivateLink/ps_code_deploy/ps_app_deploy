@@ -1,0 +1,5 @@
+az deployment group create `
+  --name deploy-app-service-bicep `
+  --resource-group rg-p2s-lab `
+  --template-file "./bicep/app-service.bicep" `
+  --parameters webAppName=afd-pl-lab-202610
