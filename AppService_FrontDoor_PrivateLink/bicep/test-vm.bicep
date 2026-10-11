@@ -79,6 +79,3 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
     }
   }
 }
-
-output vmName string = vm.name
-output nicId string = nic.id
