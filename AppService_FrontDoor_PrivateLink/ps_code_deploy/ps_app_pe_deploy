@@ -1,0 +1,5 @@
+az deployment group create `
+  --resource-group rg-p2s-lab `
+  --name deploy-appservice-pe-202610 `
+  --template-file ./bicep/appservice-private-endpoint.bicep `
+  --parameters appServiceName=afd-pl-lab-202610 vnetName=vnet-afd-pl-india-01 subnetName=snet-private-endpoints privateEndpointName=afd-pl-lab-202610-pe location=centralindia
