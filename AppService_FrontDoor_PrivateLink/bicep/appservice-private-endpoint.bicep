@@ -1,18 +1,19 @@
 targetScope = 'resourceGroup'
 
-param location string = resourceGroup().location
+@description('Region for the Private Endpoint')
+param location string = 'centralindia'
 
 @description('Name of the existing App Service')
-param appServiceName string
+param appServiceName string = 'afd-pl-lab-202610'
 
 @description('Name of the existing VNet')
-param vnetName string
+param vnetName string = 'vnet-afd-pl-india-01'
 
 @description('Name of the existing subnet for Private Endpoints')
-param subnetName string
+param subnetName string = 'snet-private-endpoints'
 
 @description('Name of the Private Endpoint to create')
-param privateEndpointName string = '${appServiceName}-pe'
+param privateEndpointName string = 'afd-pl-lab-202610-pe'
 
 @description('Private DNS zone for App Service')
 param privateDnsZoneName string = 'privatelink.azurewebsites.net'
@@ -56,7 +57,7 @@ resource appServicePrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-0
   }
 }
 
-// Existing or new Private DNS zone
+// Private DNS zone for App Service
 resource privateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   name: privateDnsZoneName
   location: 'global'
@@ -75,7 +76,7 @@ resource privateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLin
   }
 }
 
-// Automatically create the DNS records for the PE
+// Automatically manage DNS records for the PE
 resource privateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-11-01' = {
   parent: appServicePrivateEndpoint
   name: 'default'
@@ -94,3 +95,4 @@ resource privateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneG
 output privateEndpointId string = appServicePrivateEndpoint.id
 output privateDnsZoneId string = privateDnsZone.id
 output privateDnsZoneLinkId string = privateDnsZoneLink.id
+
