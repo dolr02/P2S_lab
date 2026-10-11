@@ -1,0 +1,5 @@
+az deployment group create \
+  --resource-group rg-p2s-lab \
+  --name deploy-test-vm \
+  --template-file AppService_FrontDoor_PrivateLink/bicep/test-vm.bicep \
+  --parameters adminPassword='ABC123!LabTest2026'
