@@ -1,7 +1,10 @@
 param location string = 'eastus'
 param vmName string = 'DC01'
-param vmSize string = 'Standard_B2s'
+param vmSize string = 'Standard_D2s_v4'
+
+@minLength(1)
 param adminUsername string
+
 @secure()
 param adminPassword string
 
@@ -76,4 +79,5 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
   }
 }
 
-output vmPrivateIp string = nic.properties.ipConfigurations[0].properties.privateIPAddress
+output vmPrivateIp string = nic.properties.ipConfigurations[0].properties.ipConfigurations[0].properties.privateIPAddress
+
