@@ -1,0 +1,15 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+
+- script: |
+    echo "Pipeline started"
+
+- script: |
+    find . -name "*.bicep"
+
+  displayName: "Find all Bicep files"
