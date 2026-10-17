@@ -1,0 +1,1 @@
+az deployment group create --name deploy-dc01 --resource-group rg-p2s-lab --template-file ./dc01.bicep --parameters "adminUsername=labadmin" "adminPassword=Lab-DC01!Azure2026x"
