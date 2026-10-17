@@ -7,9 +7,20 @@ pool:
 steps:
 
 - script: |
-    echo "Pipeline started"
+    az bicep version
+  displayName: "Check Bicep"
 
 - script: |
-    find . -name "*.bicep"
+    FILES=$(find . -name "*.bicep")
 
-  displayName: "Find all Bicep files"
+    for FILE in $FILES
+    do
+      echo "================================="
+      echo "Validating $FILE"
+      echo "================================="
+
+      az bicep build --file "$FILE"
+
+    done
+
+  displayName: "Validate Bicep Files"
