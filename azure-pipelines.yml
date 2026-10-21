@@ -67,3 +67,12 @@ steps:
     done
 
   displayName: "Lint Bicep Files"
+
+- script: |
+
+    az deployment group what-if \
+      --resource-group rg-p2s-lab \
+      --template-file "./${{ parameters.Lab }}/bicep/PE.bicep" \
+      --parameters "./${{ parameters.Lab }}/bicep/PE.bicepparam"
+
+  displayName: "What If"
