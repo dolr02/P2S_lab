@@ -72,7 +72,7 @@ steps:
   displayName: "What If"
 
   inputs:
-    azureSubscription: "SEM_NAZEV_SERVICE_CONNECTION"
+    azureSubscription: 'azure-p2s-lab-sc'
 
     scriptType: bash
     scriptLocation: inlineScript
