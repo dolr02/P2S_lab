@@ -1,78 +1,19 @@
-trigger: none
-
-parameters:
-- name: Lab
-  displayName: Select Lab
-  type: string
-  default: VM
-
-  values:
-  - VM
-  - Private_endpoint
-  - Private_link_service
-  - Private-dns-resolver
-  - VPN_GTW
-  - VPNClient_EntraID_auth
-  - VPN_Radius_auth
-  - Azure_HS-WAN
-  - S2S
-  - Vnets
-  - Service_endpoint
-  - WAF
-  - AppService_FrontDoor_PrivateLink
-  - LoadBalancer(StandardSKU)
-
-pool:
-  vmImage: ubuntu-latest
-
-steps:
-
-- script: |
-    az bicep version
-  displayName: "Check Bicep"
-
-- script: |
-    echo "================================="
-    echo "Selected Lab:"
-    echo "${{ parameters.Lab }}"
-    echo "================================="
-  displayName: "Selected Lab"
-
-- script: |
-
-    FILES=$(find "./${{ parameters.Lab }}" -name "*.bicep")
-
-    for FILE in $FILES
-    do
-      echo "================================="
-      echo "Building $FILE"
-      echo "================================="
-
-      az bicep build --file "$FILE"
-    done
-
-  displayName: "Build Bicep Files"
-
-- script: |
-
-    FILES=$(find "./${{ parameters.Lab }}" -name "*.bicep")
-
-    for FILE in $FILES
-    do
-      echo "================================="
-      echo "Linting $FILE"
-      echo "================================="
-
-      az bicep lint --file "$FILE"
-    done
-
-  displayName: "Lint Bicep Files"
-
-- script: |
-
-    az deployment group what-if \
-      --resource-group rg-p2s-lab \
-      --template-file "./${{ parameters.Lab }}/bicep/PE.bicep" \
-      --parameters "./${{ parameters.Lab }}/bicep/PE.bicepparam"
-
+- task: AzureCLI@2
   displayName: "What If"
+
+  inputs:
+    azureSubscription: "SEM_NAZEV_SERVICE_CONNECTION"
+
+    scriptType: bash
+    scriptLocation: inlineScript
+
+    inlineScript: |
+
+      az account show
+
+      echo "Connected to Azure"
+
+      az deployment group what-if \
+        --resource-group rg-p2s-lab \
+        --template-file "./Private_endpoint/bicep/PE.bicep" \
+        --parameters "./Private_endpoint/bicep/PE.bicepparam"
