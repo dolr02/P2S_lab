@@ -20,7 +20,20 @@ steps:
       echo "================================="
 
       az bicep build --file "$FILE"
-
     done
 
   displayName: "Validate Bicep Files"
+
+- script: |
+    FILES=$(find . -name "*.bicep")
+
+    for FILE in $FILES
+    do
+      echo "================================="
+      echo "Linting $FILE"
+      echo "================================="
+
+      az bicep lint --file "$FILE"
+    done
+
+  displayName: "Lint Bicep Files"
