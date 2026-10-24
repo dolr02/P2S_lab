@@ -1,0 +1,6 @@
+az network private-dns link vnet create `
+  --resource-group rg-p2s-lab `
+  --zone-name privatelink.blob.core.windows.net `
+  --name link-vnet2-storage `
+  --virtual-network vnet-2 `
+  --registration-enabled false
