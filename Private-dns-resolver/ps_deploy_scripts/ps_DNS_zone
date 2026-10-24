@@ -1,0 +1,1 @@
+az network private-dns zone create --resource-group rg-p2s-lab --name privatelink.blob.core.windows.net
