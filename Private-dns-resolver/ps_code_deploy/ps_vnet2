@@ -1,0 +1,5 @@
+cd /home/radek/P2S_lab/Private-dns-resolver/bicep
+az deployment group create \
+  --name deploy-vnet2 \
+  --resource-group rg-p2s-lab \
+  --template-file ./network-vnet2.bicep

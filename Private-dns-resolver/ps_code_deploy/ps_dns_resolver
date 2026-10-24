@@ -1,0 +1,1 @@
+az deployment group create --name deploy-dns-resolver --resource-group rg-p2s-lab --template-file ./dns-resolver.bicep
