@@ -1,0 +1,5 @@
+az vm run-command invoke `
+  --resource-group rg-p2s-lab `
+  --name DC01 `
+  --command-id RunPowerShellScript `
+  --scripts "Add-DnsServerConditionalForwarderZone -Name 'privatelink.blob.core.windows.net' -MasterServers 10.20.0.4"
