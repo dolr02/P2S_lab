@@ -1,0 +1,4 @@
+az deployment group create `
+  --resource-group rg-p2s-lab `
+  --template-file client-vm.bicep `
+  --parameters adminUsername='labadmin' adminPassword='LabClient-2026!'

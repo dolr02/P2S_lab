@@ -1,0 +1,4 @@
+az deployment group create \
+  --resource-group rg-hubspoke-eus-01 \
+  --parameters main.bicepparam \
+  --template-file main.bicep
