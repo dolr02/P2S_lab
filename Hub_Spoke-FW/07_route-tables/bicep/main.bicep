@@ -43,14 +43,6 @@ resource rtSpoke2 'Microsoft.Network/routeTables@2023-09-01' = {
   }
 }
 
-resource spoke1Subnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing = {
-  name: '${spoke1VnetName}/${spoke1SubnetName}'
-}
-
-resource spoke2Subnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing = {
-  name: '${spoke2VnetName}/${spoke2SubnetName}'
-}
-
 resource spoke1SubnetUpdate 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' = {
   name: '${spoke1VnetName}/${spoke1SubnetName}'
 
