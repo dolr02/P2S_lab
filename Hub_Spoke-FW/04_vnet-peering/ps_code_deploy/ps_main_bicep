@@ -1,0 +1,7 @@
+az deployment group what-if `
+  --resource-group rg-p2s-lab `
+  --template-file main.bicep `
+  --parameters main.bicepparam
+
+
+  
