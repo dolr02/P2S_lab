@@ -1,7 +1,7 @@
-az deployment group what-if `
+az deployment group create `
   --resource-group rg-p2s-lab `
   --template-file main.bicep `
   --parameters main.bicepparam
 
 
-  
+
