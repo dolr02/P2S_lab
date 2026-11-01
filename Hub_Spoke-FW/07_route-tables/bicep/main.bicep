@@ -49,6 +49,9 @@ resource spoke1SubnetUpdate 'Microsoft.Network/virtualNetworks/subnets@2023-09-0
   properties: {
     addressPrefix: '10.1.1.0/24'
 
+    privateEndpointNetworkPolicies: 'Disabled'
+    privateLinkServiceNetworkPolicies: 'Enabled'
+
     routeTable: {
       id: rtSpoke1.id
     }
@@ -60,6 +63,9 @@ resource spoke2SubnetUpdate 'Microsoft.Network/virtualNetworks/subnets@2023-09-0
 
   properties: {
     addressPrefix: '10.2.1.0/24'
+
+    privateEndpointNetworkPolicies: 'Disabled'
+    privateLinkServiceNetworkPolicies: 'Enabled'
 
     routeTable: {
       id: rtSpoke2.id
