@@ -1,0 +1,6 @@
+az deployment group create `
+  --resource-group rg-p2s-lab `
+  --name deploy-fw-policy `
+  --template-file ./main.bicep `
+  --parameters ./main.bicepparam `
+  --output table

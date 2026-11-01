@@ -1,0 +1,4 @@
+az network firewall update `
+  --resource-group rg-p2s-lab `
+  --name fw-hub-eus-01 `
+  --firewall-policy $policyId
