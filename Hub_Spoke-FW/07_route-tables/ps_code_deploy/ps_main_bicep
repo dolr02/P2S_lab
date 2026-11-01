@@ -1,0 +1,6 @@
+az deployment group create `
+  --resource-group rg-p2s-lab `
+  --name deploy-route-tables `
+  --template-file ./07_route-tables/bicep/main.bicep `
+  --parameters ./07_route-tables/bicep/main.bicepparam `
+  --output table
