@@ -14,3 +14,5 @@ param monitorPath = '/'
 param probeInterval = 30
 param probeTimeout = 10
 param toleratedFailures = 3
+
+param azurePublicIpName = 'pip-dev-eus-lb-01'

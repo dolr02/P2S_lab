@@ -45,6 +45,9 @@ param probeTimeout int = 10
 @maxValue(9)
 param toleratedFailures int = 3
 
+@description('Název veřejné IP adresy, která má být přidána jako endpoint Traffic Manageru.')
+param azurePublicIpName string = ''
+
 resource trafficManager 'Microsoft.Network/trafficManagerProfiles@2022-04-01' = {
   name: profileName
   location: 'global'
@@ -69,7 +72,20 @@ resource trafficManager 'Microsoft.Network/trafficManagerProfiles@2022-04-01' = 
         }
       ]
     }
-    endpoints: []
+    endpoints: empty(azurePublicIpName) ? [] : [
+  {
+    name: 'azure-lb'
+    type: 'Microsoft.Network/trafficManagerProfiles/azureEndpoints'
+    properties: {
+      targetResourceId: resourceId(
+        'Microsoft.Network/publicIPAddresses',
+        azurePublicIpName
+      )
+      endpointStatus: 'Enabled'
+      priority: 1
+    }
+  }
+]
   }
 }
 
