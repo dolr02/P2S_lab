@@ -126,8 +126,8 @@ resource webServer 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = i
     type: 'CustomScript'
     typeHandlerVersion: '2.1'
     autoUpgradeMinorVersion: true
-    settings: {
-      commandToExecute: 'bash -c "set -e; export DEBIAN_FRONTEND=noninteractive; apt-get -o Acquire::Retries=5 update; apt-get -o Acquire::Retries=5 install -y nginx; echo \'<h1>${vmName}</h1>\' > /var/www/html/index.html; systemctl enable --now nginx; curl --fail http://localhost/"'
+        settings: {
+      commandToExecute: 'bash -c "set -e; cloud-init status --wait; export DEBIAN_FRONTEND=noninteractive; apt-get -o Acquire::Retries=5 update; apt-get -o Acquire::Retries=5 -o DPkg::Lock::Timeout=300 install -y nginx; echo \'<h1>${vmName}</h1>\' > /var/www/html/index.html; systemctl enable --now nginx; curl --fail http://localhost/"'
     }
   }
 }
