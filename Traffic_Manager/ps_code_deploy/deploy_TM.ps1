@@ -1,14 +1,11 @@
-# 1. Kontrola šablony
-./Traffic_Manager/ps_code_deploy/deploy.ps1 `
-    -ResourceGroup "rg-traffic-manager-lab" `
-    -Action validate
+$rg = "rg-p2s-lab"
+$template = "./main.bicep"
+$params = "./main.bicepparam"
 
-# 2. Náhled změn
-./Traffic_Manager/ps_code_deploy/deploy.ps1 `
-    -ResourceGroup "rg-traffic-manager-lab" `
-    -Action what-if
+az deployment group validate --resource-group $rg --template-file $template --parameters $params
 
-# 3. Nasazení
-./Traffic_Manager/ps_code_deploy/deploy.ps1 `
-    -ResourceGroup "rg-traffic-manager-lab" `
-    -Action deploy
+if ($LASTEXITCODE -eq 0) {
+    az deployment group create --resource-group $rg --template-file $template --parameters $params
+} else {
+    Write-Host "Validace selhala. Nasazení se nespustilo."
+}
