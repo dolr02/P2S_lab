@@ -1,0 +1,2 @@
+cd /home/radek/P2S_lab
+./LoadBalancer/ps_deploy/check_VMs.ps1
