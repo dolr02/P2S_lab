@@ -13,7 +13,7 @@ param dnsLabel string
 @maxValue(2147483647)
 param dnsTtl int = 30
 
-@description('Protokol sondy dostupnosti backendové služby.')
+@description('Protokol sondy dostupnosti.')
 @allowed([
   'HTTP'
   'HTTPS'
@@ -25,17 +25,17 @@ param monitorProtocol string = 'HTTP'
 @maxValue(65535)
 param monitorPort int = 80
 
-@description('HTTP cesta, kterou sonda kontroluje.')
+@description('HTTP cesta kontrolovaná sondou.')
 param monitorPath string = '/'
 
-@description('Interval sond: standardní 30 s nebo rychlý 10 s.')
+@description('Interval sond v sekundách.')
 @allowed([
   10
   30
 ])
 param probeInterval int = 30
 
-@description('Časový limit sondy v sekundách. Pro interval 30 s použijeme 10 s.')
+@description('Timeout sondy. Pro interval 10 s použij hodnotu 5–9 s.')
 @minValue(5)
 @maxValue(10)
 param probeTimeout int = 10
@@ -45,8 +45,40 @@ param probeTimeout int = 10
 @maxValue(9)
 param toleratedFailures int = 3
 
-@description('Název veřejné IP adresy, která má být přidána jako endpoint Traffic Manageru.')
+@description('Název veřejné IP Azure LB ve stejné resource group.')
 param azurePublicIpName string = ''
+
+@description('DNS název on-prem webu, bez http:// nebo https://.')
+param onpremFqdn string = ''
+
+// Primární Azure větev.
+var azureEndpoints = empty(azurePublicIpName) ? [] : [
+  {
+    name: 'azure-lb'
+    type: 'Microsoft.Network/trafficManagerProfiles/azureEndpoints'
+    properties: {
+      targetResourceId: resourceId(
+        'Microsoft.Network/publicIPAddresses',
+        azurePublicIpName
+      )
+      endpointStatus: 'Enabled'
+      priority: 1
+    }
+  }
+]
+
+// Záložní on-prem větev.
+var onpremEndpoints = empty(onpremFqdn) ? [] : [
+  {
+    name: 'onprem-web'
+    type: 'Microsoft.Network/trafficManagerProfiles/externalEndpoints'
+    properties: {
+      target: onpremFqdn
+      endpointStatus: 'Enabled'
+      priority: 2
+    }
+  }
+]
 
 resource trafficManager 'Microsoft.Network/trafficManagerProfiles@2022-04-01' = {
   name: profileName
@@ -54,10 +86,12 @@ resource trafficManager 'Microsoft.Network/trafficManagerProfiles@2022-04-01' = 
   properties: {
     profileStatus: 'Enabled'
     trafficRoutingMethod: 'Priority'
+
     dnsConfig: {
       relativeName: dnsLabel
       ttl: dnsTtl
     }
+
     monitorConfig: {
       protocol: monitorProtocol
       port: monitorPort
@@ -72,20 +106,8 @@ resource trafficManager 'Microsoft.Network/trafficManagerProfiles@2022-04-01' = 
         }
       ]
     }
-    endpoints: empty(azurePublicIpName) ? [] : [
-  {
-    name: 'azure-lb'
-    type: 'Microsoft.Network/trafficManagerProfiles/azureEndpoints'
-    properties: {
-      targetResourceId: resourceId(
-        'Microsoft.Network/publicIPAddresses',
-        azurePublicIpName
-      )
-      endpointStatus: 'Enabled'
-      priority: 1
-    }
-  }
-]
+
+    endpoints: concat(azureEndpoints, onpremEndpoints)
   }
 }
 
