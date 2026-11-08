@@ -1,0 +1,3 @@
+cd /home/radek/P2S_lab
+git pull --ff-only
+./Traffic_Manager/ps_code_deploy/deploy_TM.ps1

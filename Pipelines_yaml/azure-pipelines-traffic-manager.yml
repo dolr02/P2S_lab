@@ -1,0 +1,5 @@
+# TODO: Automated lab deployment through Azure DevOps.
+# Order: networks → LB → web VMs → Traffic Manager → tests.
+# S2S will be added later.
+
+trigger: none
