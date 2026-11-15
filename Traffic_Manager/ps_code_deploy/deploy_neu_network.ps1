@@ -1,5 +1,5 @@
 $rg = "rg-p2s-lab"
-$template = "$PSScriptRoot/../bicep/weu-network.bicep"
+$template = "$PSScriptRoot/../bicep/neu-network.bicep"
 
 az deployment group validate `
     --resource-group $rg `

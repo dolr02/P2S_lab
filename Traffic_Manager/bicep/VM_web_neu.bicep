@@ -1,6 +1,6 @@
 targetScope = 'resourceGroup'
 
-param location string = 'NorthEurope'
+param location string = 'northeurope'
 param adminUsername string = 'radek'
 
 @secure()
@@ -10,7 +10,6 @@ param vmSize string = 'Standard_B1s'
 
 var vmName = 'vm-web-neu-01'
 
-// Síť se nasazuje samostatně přes weu-network.bicep.
 resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
   name: 'vnet-dev-neu-01'
 }
@@ -57,7 +56,7 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
 }
 
 resource nic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
-  name: 'nic-web-weu-01'
+  name: 'nic-web-neu-01'
   location: location
   properties: {
     networkSecurityGroup: {

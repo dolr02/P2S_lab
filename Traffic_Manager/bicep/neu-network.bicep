@@ -1,9 +1,9 @@
 targetScope = 'resourceGroup'
 
-param location string = 'NorthEurope'
+param location string = 'northeurope'
 
-resource weuVnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
-  name: 'vnet-dev-weu-01'
+resource neuVnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
+  name: 'vnet-dev-neu-01'
   location: location
   properties: {
     addressSpace: {
@@ -13,7 +13,7 @@ resource weuVnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
     }
     subnets: [
       {
-        name: 'snet-web-weu-01'
+        name: 'snet-web-neu-01'
         properties: {
           addressPrefix: '10.1.1.0/24'
         }
@@ -22,5 +22,5 @@ resource weuVnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
   }
 }
 
-output vnetName string = weuVnet.name
-output subnetName string = 'snet-web-weu-01'
+output vnetName string = neuVnet.name
+output subnetName string = 'snet-web-neu-01'
