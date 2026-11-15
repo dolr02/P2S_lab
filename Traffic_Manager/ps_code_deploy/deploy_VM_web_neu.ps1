@@ -1,6 +1,6 @@
 $rg = "rg-p2s-lab"
-$template = "$PSScriptRoot/../bicep/VM_web_weu.bicep"
-$password = Read-Host "Heslo správce West Europe VM" -MaskInput
+$template = "$PSScriptRoot/../bicep/VM_web_neu.bicep"
+$password = Read-Host "Heslo správce North Europe VM" -MaskInput
 
 try {
     az deployment group validate `

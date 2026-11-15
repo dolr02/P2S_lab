@@ -1,6 +1,6 @@
 targetScope = 'resourceGroup'
 
-param location string = 'westeurope'
+param location string = 'NorthEurope'
 param adminUsername string = 'radek'
 
 @secure()
@@ -8,20 +8,20 @@ param adminPassword string
 
 param vmSize string = 'Standard_B1s'
 
-var vmName = 'vm-web-weu-01'
+var vmName = 'vm-web-neu-01'
 
 // Síť se nasazuje samostatně přes weu-network.bicep.
 resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
-  name: 'vnet-dev-weu-01'
+  name: 'vnet-dev-neu-01'
 }
 
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing = {
   parent: vnet
-  name: 'snet-web-weu-01'
+  name: 'snet-web-neu-01'
 }
 
 resource pip 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
-  name: 'pip-web-weu-01'
+  name: 'pip-web-neu-01'
   location: location
   sku: {
     name: 'Standard'
@@ -29,13 +29,13 @@ resource pip 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
   properties: {
     publicIPAllocationMethod: 'Static'
     dnsSettings: {
-      domainNameLabel: 'web-weu-${uniqueString(resourceGroup().id)}'
+      domainNameLabel: 'web-neu-${uniqueString(resourceGroup().id)}'
     }
   }
 }
 
 resource nsg 'Microsoft.Network/networkSecurityGroups@2023-09-01' = {
-  name: 'nsg-web-weu-01'
+  name: 'nsg-web-neu-01'
   location: location
   properties: {
     securityRules: [

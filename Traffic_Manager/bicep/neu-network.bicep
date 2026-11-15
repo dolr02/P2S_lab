@@ -1,6 +1,6 @@
 targetScope = 'resourceGroup'
 
-param location string = 'westeurope'
+param location string = 'NorthEurope'
 
 resource weuVnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
   name: 'vnet-dev-weu-01'
