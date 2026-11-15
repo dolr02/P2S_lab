@@ -1,1 +1,1 @@
-../ps_code_deploy/deploy_neu_network.ps1
+./Traffic_Manager/ps_code_deploy/deploy_neu_network.ps1
