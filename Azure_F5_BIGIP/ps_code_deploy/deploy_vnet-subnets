@@ -1,1 +1,1 @@
-./Azure_F5_BIGIP/ps_code_deploy/deploy-vnet-subnets.ps1 -Deploy
+./Azure_F5_BIGIP/ps_code_deploy/deploy_vnet-subnets.ps1
