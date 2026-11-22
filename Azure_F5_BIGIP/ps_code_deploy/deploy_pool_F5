@@ -1,0 +1,1 @@
+az vm run-command invoke --resource-group rg-p2s-lab --name vm-f5-bigip --command-id RunShellScript --scripts 'tmsh create ltm pool pool-f5-backend monitor /Common/http members add { 10.73.2.5:8080 { } } && tmsh save sys config && tmsh show ltm pool pool-f5-backend members' --query 'value[].message' -o tsv
