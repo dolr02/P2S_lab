@@ -1,1 +1,1 @@
-./Azure_F5_BIGIP/monitoring/ps_code_deploy/deploy_VM-F5-Monitoring.ps1
+./Azure_F5_BIGIP/ps_code_deploy/deploy_VM-F5-Monitoring.ps1 && ./Azure_F5_BIGIP/ps_code_deploy/deploy_VM-F5-Monitoring.ps1 -Deploy
