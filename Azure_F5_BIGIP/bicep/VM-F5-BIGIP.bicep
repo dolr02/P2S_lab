@@ -61,9 +61,15 @@ resource bigip 'Microsoft.Compute/virtualMachines@2024-07-01' = {
         }
         {
           id: externalNic.id
+          properties: {
+            primary: false
+          }
         }
         {
           id: internalNic.id
+          properties: {
+            primary: false
+          }
         }
       ]
     }
