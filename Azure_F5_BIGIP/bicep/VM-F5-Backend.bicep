@@ -1,6 +1,8 @@
 param location string = resourceGroup().location
 param adminUsername string = 'labadmin'
-param sshPublicKey string
+
+@secure()
+param adminPassword string
 
 resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
   name: 'vnet-f5-lab'
@@ -53,7 +55,7 @@ runcmd:
 '''
 
 resource backendVm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
-  name: 'vm-f5-backend'
+  name: 'VM-F5-Backend'
   location: location
   properties: {
     hardwareProfile: {
@@ -76,17 +78,10 @@ resource backendVm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
     osProfile: {
       computerName: 'vm-f5-backend'
       adminUsername: adminUsername
+      adminPassword: adminPassword
       customData: base64(cloudInit)
       linuxConfiguration: {
-        disablePasswordAuthentication: true
-        ssh: {
-          publicKeys: [
-            {
-              path: '/home/labadmin/.ssh/authorized_keys'
-              keyData: sshPublicKey
-            }
-          ]
-        }
+        disablePasswordAuthentication: false
       }
     }
     networkProfile: {
