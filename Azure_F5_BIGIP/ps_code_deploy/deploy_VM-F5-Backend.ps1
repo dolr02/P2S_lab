@@ -1,7 +1,4 @@
 param(
-    [Parameter(Mandatory)]
-    [string]$SshPublicKeyPath,
-
     [switch]$Deploy
 )
 
@@ -11,21 +8,15 @@ if (-not (Test-Path -LiteralPath $templateFile -PathType Leaf)) {
     throw "Bicep šablona nebyla nalezena: $templateFile"
 }
 
-if (-not (Test-Path -LiteralPath $SshPublicKeyPath -PathType Leaf)) {
-    throw "Soubor s veřejným SSH klíčem nebyl nalezen: $SshPublicKeyPath"
-}
-
-$sshPublicKey = (Get-Content -LiteralPath $SshPublicKeyPath -Raw).Trim()
-
 $deploymentArgs = @(
     '--resource-group', 'rg-p2s-lab'
     '--name', 'f5-backend-vm'
     '--template-file', $templateFile
-    '--parameters', 'location=eastus', "sshPublicKey=$sshPublicKey"
+    '--parameters', 'location=eastus'
 )
 
 if ($Deploy) {
-    az deployment group create @deploymentArgs
+    az deployment group create @deploymentArgs --query properties.provisioningState -o tsv
 } else {
     az deployment group what-if @deploymentArgs
 }
